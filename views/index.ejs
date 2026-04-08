@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vpsphong.pro - Thuê VPS Ninja School Tối Ưu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Press+Start+2P&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; scroll-behavior: smooth; }
+        .logo-text { font-family: 'Press Start 2P', sans-serif; background: linear-gradient(90deg, #67e8f9, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-bg { background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); }
+        .ninja-icon { animation: float 3s ease-in-out infinite; }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(12deg); }
+            50% { transform: translateY(-10px) rotate(15deg); }
+            100% { transform: translateY(0px) rotate(12deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- NAVBAR -->
+    <nav class="bg-white/95 backdrop-blur-md border-b border-sky-100 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <a href="/" class="flex flex-shrink-0 items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-sky-600 rounded-2xl flex items-center justify-center text-3xl shadow-xl border-4 border-white rotate-12 ninja-icon">🥷</div>
+                <div>
+                    <span class="logo-text text-2xl md:text-4xl tracking-tighter block leading-none">VP</span>
+                    <span class="text-sky-600 text-sm md:text-lg font-bold block mt-1 tracking-wide">phong.pro</span>
+                </div>
+            </a>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-bold text-gray-500 uppercase tracking-wide">
+                <a href="#mua-vps" class="hover:text-cyan-600 transition">Bảng Giá</a>
+                <% if (typeof user !== 'undefined' && user) { %>
+                  <a href="/user/vps" class="hover:text-cyan-600 transition">Quản Lý VPS</a>
+                <% } else { %>
+                  <a href="/login" class="hover:text-cyan-600 transition">Hệ Thống</a>
+                <% } %>
+                <a href="#huong-dan" class="hover:text-cyan-600 transition">Hướng Dẫn</a>
+                <a href="#lien-he" class="hover:text-cyan-600 transition">Liên Hệ</a>
+            </div>
+            
+            <div class="flex gap-2.5 items-center ml-auto md:ml-0">
+                <% if (typeof user !== 'undefined' && user) { %>
+                  <span class="hidden md:inline font-black text-emerald-600 mr-2 text-lg"><%= user.balance.toLocaleString() %>đ</span>
+                  <a href="<%= (typeof isAdmin !== 'undefined' && isAdmin) ? '/admin' : '/user/dashboard' %>" class="bg-gray-900 hover:bg-cyan-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold flex items-center gap-2 transition shadow-md shadow-gray-900/10">Menu</a>
+                  <a href="/logout" class="bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white px-4 py-2.5 rounded-2xl text-sm font-bold transition">Thoát</a>
+                <% } else { %>
+                  <a href="/login" class="text-sky-600 hover:bg-sky-50 px-5 py-2.5 rounded-2xl text-sm font-black transition">Đăng Nhập</a>
+                  <a href="/register" class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-2xl text-sm font-black flex items-center gap-2 transition shadow-lg shadow-sky-500/30">Đăng Ký</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <!-- BANNER PHONG CÁCH NINJA -->
+    <section class="hero-bg text-white py-16 md:py-28 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div class="max-w-6xl mx-auto px-6 text-center relative z-10">
+            <div class="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-2 rounded-full mb-8 border border-white/20">
+                <span class="text-2xl">🥷</span>
+                <span class="text-lg md:text-xl font-bold tracking-widest text-sky-50 uppercase">NINJA SCHOOL VPS</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6">Trải nghiệm vượt trội<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-100">Chơi NSO Siêu Mượt</span></h1>
+            <p class="text-lg md:text-2xl mb-12 text-sky-100 font-medium max-w-3xl mx-auto">Tối ưu riêng cho Ninja School và treo máy tự động. Proxy IP Sạch • Test lỗi đền tiền.</p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#mua-vps" class="bg-white text-sky-600 px-8 py-4 rounded-full text-lg font-bold hover:scale-105 transition shadow-2xl shadow-cyan-900/50">Chọn Gói Cấu Hình Vừa Túi Tiền</a>
+                <a href="<%=(typeof user!=='undefined'&&user)?'/user/vps':'/login'%>" class="bg-transparent border-2 border-white/30 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-white/10 transition backdrop-blur-sm">Quản Lý VPS của tôi</a>
+            </div>
+        </div>
+        <!-- Ninja decoration -->
+        <div class="absolute -bottom-8 -right-8 text-[12rem] opacity-[0.08] ninja-icon pointer-events-none drop-shadow-2xl">🥷</div>
+        <div class="absolute top-12 left-8 text-8xl opacity-[0.08] rotate-12 ninja-icon pointer-events-none">🥷</div>
+    </section>
+
+    <!-- MUA VPS -->
+    <section id="mua-vps" class="max-w-7xl mx-auto px-6 py-20">
+        <h2 class="text-4xl font-black text-center text-gray-900 mb-4 tracking-tight">Chọn VPS Phù Hợp Cho Bạn</h2>
+        <p class="text-center text-xl text-gray-500 font-medium mb-12 max-w-2xl mx-auto">Giá thành cực kỳ rẻ, chất lượng ổn định cao nhất, hoàn toàn tự động kích hoạt.</p>
+
+        <!-- Chọn thời gian -->
+        <div class="flex justify-center mb-12">
+            <div class="bg-white rounded-full shadow-sm border border-gray-100 p-1.5 flex flex-wrap gap-1">
+                <button onclick="setMonth(1)" id="month-1" class="month-btn active px-6 py-3 rounded-full font-bold text-sm text-gray-600 hover:text-sky-600 transition">1 Tháng</button>
+                <button onclick="setMonth(3)" id="month-3" class="month-btn px-6 py-3 rounded-full font-bold text-sm text-gray-600 hover:text-sky-600 transition flex items-center gap-1.5">3 Tháng <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px]">-10%</span></button>
+                <button onclick="setMonth(6)" id="month-6" class="month-btn px-6 py-3 rounded-full font-bold text-sm text-gray-600 hover:text-sky-600 transition flex items-center gap-1.5 hidden sm:flex">6 Tháng <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px]">-14%</span></button>
+                <button onclick="setMonth(12)" id="month-12" class="month-btn px-6 py-3 rounded-full font-bold text-sm text-gray-600 hover:text-sky-600 transition flex items-center gap-1.5 hidden md:flex">12 Tháng <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px]">-17%</span></button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex flex-wrap justify-center gap-3 mb-10 pb-4 border-b border-gray-100">
+            <button onclick="showTab(0)" id="tab-0" class="tab-btn active px-6 py-3 text-lg font-bold rounded-xl text-gray-500 hover:text-sky-600 transition flex items-center gap-2">VPS Game Ninja School <span class="text-[10px] bg-amber-400 text-black px-2 py-1 rounded-md ml-1 shadow-sm uppercase tracking-wider">Đã MOD NSO</span></button>
+            <button onclick="showTab(1)" id="tab-1" class="tab-btn px-6 py-3 text-lg font-bold rounded-xl text-gray-500 hover:text-sky-600 transition">VPS Trắng (Sạch sẽ)</button>
+            <button onclick="showTab(2)" id="tab-2" class="tab-btn px-6 py-3 text-lg font-bold rounded-xl text-gray-500 hover:text-sky-600 transition">VPS Ngoại Proxy/IP</button>
+        </div>
+
+        <div id="content-0" class="tab-content grid md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+        <div id="content-1" class="tab-content hidden grid md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+        <div id="content-2" class="tab-content hidden grid md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+    </section>
+
+    <!-- QUẢN LÝ VPS DEMO / REAL -->
+    <section id="quan-ly" class="bg-sky-50/50 py-24 border-y border-sky-100">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+              <h2 class="text-4xl font-black text-gray-900 tracking-tight mb-4">Giao Diện Quản Lý Thông Minh</h2>
+              <p class="text-xl text-gray-500 font-medium">Bạn có thể điều khiển toàn bộ Server VPS chỉ với vài nút bấm dễ dàng.</p>
+            </div>
+            
+            <% 
+              let d_vpsName = "VPS Ninja School N-14X";
+              let d_vpsCode = "#VPS02341";
+              let d_cfg = "2 Core - 2GB RAM";
+              let d_ip = "103.XXX.XXX.XXX";
+              let d_user = "root";
+              let d_pass = "••••••••";
+              let d_pass_plain = "DemoNinja123";
+              let d_real = false;
+              let d_statusColor = "bg-emerald-500";
+              let d_statusAnim = "animate-pulse shadow-lg shadow-emerald-500/50";
+              
+              if (typeof demoVps !== 'undefined' && demoVps) {
+                  d_vpsName = demoVps.vpsId ? demoVps.vpsId.name : "VPS Tùy Chọn";
+                  d_vpsCode = (demoVps.vpsId && typeof demoVps.vpsId.saleCode === 'number' && demoVps.vpsId.saleCode > 0) ? ("#vpsphong" + demoVps.vpsId.saleCode) : ("#vpsphong" + String(demoVps.vpsId ? demoVps.vpsId._id : '').slice(-6));
+                  d_cfg = demoVps.vpsId ? (demoVps.vpsId.cpu + ' Core - ' + demoVps.vpsId.ram + 'GB RAM') : "Không rõ";
+                  d_ip = demoVps.ip || "Đang cấp phát...";
+                  d_user = demoVps.username || "root";
+                  d_pass_plain = demoVps.password || "";
+                  d_pass = d_pass_plain ? "••••••••" : "—";
+                  d_real = true;
+                  
+                  if (demoVps.status === 'stopped') {
+                      d_statusColor = 'bg-amber-500'; d_statusAnim = '';
+                  } else if (demoVps.status === 'expired' || demoVps.status === 'suspended') {
+                      d_statusColor = 'bg-rose-500'; d_statusAnim = '';
+                  }
+              }
+            %>
+
+            <div class="bg-white rounded-[2rem] shadow-2xl shadow-sky-900/5 p-8 md:p-10 max-w-4xl mx-auto border border-sky-100 relative overflow-hidden user-vps-pw-cell">
+                <div class="absolute top-0 right-0 p-8 text-sky-50 pointer-events-none"><i class="fa-solid fa-server text-8xl"></i></div>
+                <div class="border border-gray-100 bg-gray-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                           <div class="w-2.5 h-2.5 rounded-full <%= d_statusColor %> <%= d_statusAnim %>"></div>
+                           <h3 class="font-black text-xl text-gray-900"><%= d_vpsName %></h3>
+                        </div>
+                        <p class="text-sm text-gray-500 font-medium mb-4">Mã đơn: <%= d_vpsCode %> • Cấu hình: <%= d_cfg %></p>
+                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-2 text-[13px] bg-white p-4 rounded-xl border border-sky-100 shadow-sm">
+                            <div class="font-medium text-gray-600 flex items-center">
+                                <span class="w-10 text-gray-400">IP:</span> 
+                                <span class="font-mono font-bold text-gray-900 ml-1 bg-sky-50 px-2 py-1 rounded text-sm"><%= d_ip %></span>
+                            </div>
+                            <div class="font-medium text-gray-600 flex items-center">
+                                <span class="w-10 text-gray-400">User:</span> 
+                                <span class="font-mono font-bold text-gray-900 ml-1 bg-gray-50 px-2 py-1 rounded text-sm"><%= d_user %></span>
+                            </div>
+                            <div class="font-medium text-gray-600 flex items-center gap-2 relative">
+                                <span class="w-10 text-gray-400">Pass:</span>
+                                <% if (d_pass_plain) { %>
+                                    <div class="bg-gray-50 px-2 py-1 rounded flex items-center gap-3">
+                                        <span class="user-vps-pw-masked font-mono font-bold text-gray-900 text-sm select-none tracking-widest mt-0.5">••••••••</span>
+                                        <span class="user-vps-pw-plain hidden font-mono font-bold text-gray-900 text-sm select-none"><%= d_pass_plain %></span>
+                                        <button class="user-vps-pw-toggle text-sky-500 hover:text-sky-600 transition"><i class="fas fa-eye"></i></button>
+                                    </div>
+                                <% } else { %>
+                                    <span class="bg-gray-50 text-gray-400 px-2 py-1 rounded font-mono text-sm">—</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3 shrink-0">
+                        <% if (d_real) { %>
+                            <a href="/user/vps" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-cyan-500/20 whitespace-nowrap"><i class="fa-solid fa-gear mr-1.5 text-cyan-200"></i> Vào Khu quản lý</a>
+                        <% } else { %>
+                            <button onclick="demoAlert('Khởi động lại')" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-amber-500/20"><i class="fa-solid fa-rotate-right mr-1.5"></i> Restart</button>
+                            <button onclick="demoAlert('Dừng')" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-rose-500/20"><i class="fa-solid fa-stop mr-1.5"></i> Stop</button>
+                            <button onclick="demoAlert('Bật')" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-emerald-500/20"><i class="fa-solid fa-play mr-1.5"></i> Start</button>
+                        <% } %>
+                    </div>
+                </div>
+                <div class="mt-8 text-center border-t border-gray-100 pt-8">
+                    <button onclick="demoAlert('Gửi nhắc nhở')" class="text-sky-600 font-bold flex items-center gap-2 mx-auto hover:text-sky-700 bg-sky-50 px-6 py-3 rounded-full hover:bg-sky-100 transition border border-sky-100 shadow-sm">
+                        <i class="fa-solid fa-bell animate-bounce"></i> Nhắc tôi tự động gia hạn VPS (Zalo / FB)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="lien-he" class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-12 text-center md:text-left mb-12">
+                <div class="md:col-span-1 flex flex-col items-center md:items-start">
+                  <div class="flex items-center gap-3 mb-6">
+                      <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-sky-600 rounded-xl flex items-center justify-center text-2xl rotate-12 ninja-icon font-bold">🥷</div>
+                      <span class="logo-text text-3xl font-black">VPphong</span>
+                  </div>
+                  <p class="text-sm font-medium text-gray-400 leading-relaxed mb-6">Chiến game thật phê, quản lý siêu dễ! Dịch vụ Cloud Server tối ưu hàng đầu tại Việt Nam.</p>
+                </div>
+                
+                <div class="flex flex-col items-center md:items-start">
+                  <h4 class="text-lg font-bold mb-6 text-white uppercase tracking-wider">Hỗ Trợ Nhanh</h4>
+                  <a href="#" class="text-gray-400 hover:text-sky-400 font-medium mb-4 flex items-center gap-2 transition"><i class="fa-brands fa-facebook text-xl text-[#0866FF]"></i> Chat qua Facebook Fanpage</a>
+                  <a href="#" class="text-gray-400 hover:text-sky-400 font-medium mb-4 flex items-center gap-2 transition"><i class="fa-solid fa-comment-dots text-xl text-[#0068FF]"></i> Liên hệ qua Zalo (5 phút rep)</a>
+                </div>
+                
+                <div class="flex flex-col items-center md:items-start">
+                  <h4 class="text-lg font-bold mb-6 text-white uppercase tracking-wider">Chính Sách</h4>
+                  <a href="#" class="text-gray-400 hover:text-sky-400 font-medium mb-4 transition">Điều khoản sử dụng</a>
+                  <a href="#" class="text-gray-400 hover:text-sky-400 font-medium mb-4 transition">Chính sách bảo mật</a>
+                  <a href="#huong-dan" class="text-gray-400 hover:text-sky-400 font-medium mb-4 transition">Hướng dẫn sử dụng VPS</a>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center text-sm font-medium text-gray-500">
+                © 2026 vpsphong.pro - Mọi bản quyền được bảo lưu.
+            </div>
+        </div>
+    </footer>
+
+    <style>
+      .tab-btn.active { color: #0284c7; background-color: #f0f9ff; }
+      .month-btn.active { background-color: #0284c7; color: white; }
+    </style>
+
+    <script>
+        const serverPackages = <%- JSON.stringify(vpsPackages || []) %>;
+        let currentMonth = 1;
+        let selectedTab = 0;
+
+        const packagesByTab = {
+            0: serverPackages.filter(p => !p.productKind || p.productKind === 'game'),
+            1: serverPackages.filter(p => p.productKind === 'blank'),
+            2: serverPackages.filter(p => p.productKind === 'datacenter')
+        };
+        // Cập nhật fallback: Nếu gói VPS cũ không có productKind thì cứ nhét vô tab 0 hoặc 1
+
+        function discountPrice(base, months) {
+            let total = base * months;
+            if (months === 3) total *= 0.9;
+            if (months === 6) total *= 0.861;
+            if (months === 12) total *= 0.833;
+            return Math.floor(total);
+        }
+
+        function renderPlans() {
+            const container = document.getElementById('content-' + selectedTab);
+            container.innerHTML = '';
+            const list = packagesByTab[selectedTab] || [];
+            
+            if(list.length === 0) {
+                container.innerHTML = '<div class="col-span-full py-12 text-center border-2 border-dashed border-gray-200 rounded-3xl"><p class="text-gray-400 text-lg font-bold"><i class="fa-solid fa-box-open mr-2 text-2xl"></i>Danh mục này hiện chưa có gói cấu hình nào.</p></div>';
+                return;
+            }
+
+            list.forEach((vps, i) => {
+                const total = discountPrice(vps.price, currentMonth);
+                const isLogged = <%= (typeof user !== 'undefined' && user) ? 'true' : 'false' %>;
+                
+                const formattedPrice = Math.floor(total / 1000) + 'k';
+                const location = vps.ipLocation || 'Singapore';
+                const shortSpecsHtml = `<p class="text-[11px] text-gray-500 font-bold mt-2 tracking-wide uppercase">\${vps.disk}GB SSD • IP \${location}</p>`;
+
+                let featuresHtml = '';
+                if (vps.features && vps.features.length > 0) {
+                    vps.features.forEach(f => {
+                        featuresHtml += `<li><span class="inline-flex items-center justify-center bg-emerald-50/70 text-emerald-600 text-[10.5px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-square-check mr-1.5 text-emerald-500 opacity-80 text-xs"></i> \${f}</span></li>`;
+                    });
+                } else {
+                    featuresHtml = `<li><span class="inline-flex items-center justify-center bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-square-check mr-1.5 text-gray-400 text-xs"></i> Cơ bản</span></li>`;
+                }
+
+                const div = document.createElement('div');
+                div.className = "bg-white flex flex-col border border-cyan-100/50 rounded-[2rem] p-7 text-center hover:border-cyan-400 hover:shadow-[0_10px_40px_-10px_rgba(0,188,212,0.3)] transition-all duration-300 relative group";
+                div.innerHTML = `
+                    <div class="mb-5">
+                      <h3 class="text-xl font-bold text-gray-800 leading-tight">\${vps.name}</h3>
+                      \${shortSpecsHtml}
+                    </div>
+                    
+                    <div class="my-3 flex justify-center items-end gap-1">
+                      <span class="text-[2.75rem] font-black text-[#00a8cc] tracking-tighter leading-none">\${formattedPrice}</span>
+                      <span class="text-[13px] font-medium text-[#00a8cc] pb-1">/ \${currentMonth} tháng</span>
+                    </div>
+                    
+                    <ul class="flex flex-col items-center gap-2.5 flex-1 pt-6 pb-6 border-t border-dashed border-gray-100 mt-2">
+                        \${featuresHtml}
+                    </ul>
+                    
+                    <form action="/user/buy-vps" method="POST" class="mt-auto relative w-full">
+                        <input type="hidden" name="vpsId" value="\${vps._id}">
+                        <input type="hidden" name="months" value="\${currentMonth}">
+                        \${isLogged ? \`
+                            <button type="submit" class="w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</button>
+                        \` : \`
+                            <a href="/login" class="flex items-center justify-center w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</a>
+                        \`}
+                    </form>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function setMonth(m) {
+            currentMonth = m;
+            document.querySelectorAll('.month-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-sky-600', 'text-white');
+                btn.classList.add('text-gray-600');
+            });
+            const selected = document.getElementById('month-' + m);
+            selected.classList.add('active', 'bg-sky-600', 'text-white');
+            selected.classList.remove('text-gray-600');
+            renderPlans();
+        }
+
+        function showTab(n) {
+            selectedTab = n;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-sky-50', 'text-sky-600');
+                b.classList.add('text-gray-500');
+            });
+            const t = document.getElementById('tab-' + n);
+            t.classList.add('active', 'bg-sky-50', 'text-sky-600');
+            t.classList.remove('text-gray-500');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('content-' + n).classList.remove('hidden');
+            renderPlans();
+        }
+
+        function toggleIP(id) { 
+            const el = document.getElementById('ip'+id); 
+            if(el.textContent.includes('XXX')) { el.textContent = '103.145.67.89'; el.classList.add("text-emerald-600");}
+            else { el.textContent = '103.XXX.XXX.XXX'; el.classList.remove("text-emerald-600");}
+        }
+        function togglePass(id) {
+             const el = document.getElementById('pass'+id); 
+             if(el.textContent === '••••••••') { el.textContent = 'DemoNinja123'; el.classList.add("text-emerald-600");}
+             else { el.textContent = '••••••••'; el.classList.remove("text-emerald-600");}
+        }
+        function demoAlert(action) { 
+             alert('✅ Nút ' + action + ' VPS đã nhận lệnh (Demo mode)!'); 
+        }
+
+        window.onload = () => {
+            document.getElementById('tab-0').classList.add('active', 'bg-sky-50', 'text-sky-600');
+            setMonth(1); // Mặc định renderPlans sẽ được gọi trong này
+        };
+    </script>
+</body>
+</html>

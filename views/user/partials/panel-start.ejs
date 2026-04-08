@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Khách hàng' %> - vpsphong.pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Press+Start+2P&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .logo-text { font-family: 'Press Start 2P', sans-serif; background: linear-gradient(90deg, #67e8f9, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-bg { background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); }
+    .ninja-icon { animation: float 3s ease-in-out infinite; }
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(12deg); }
+        50% { transform: translateY(-10px) rotate(15deg); }
+        100% { transform: translateY(0px) rotate(12deg); }
+    }
+    .sidebar-search::placeholder { color: #94a3b8; }
+  </style>
+</head>
+<body class="text-sm bg-gray-50 text-gray-800 relative">
+<% const nav = typeof activeNav !== 'undefined' ? activeNav : 'dashboard'; %>
+<div class="min-h-screen bg-transparent">
+  
+  <!-- NAVBAR -->
+  <nav class="bg-white/95 backdrop-blur-md border-b border-sky-100 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <a href="/" class="flex flex-shrink-0 items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-sky-600 rounded-xl flex items-center justify-center text-xl shadow-xl border-2 border-white rotate-12 ninja-icon font-bold text-white">🥷</div>
+              <div>
+                  <span class="logo-text text-xl md:text-2xl tracking-tighter block leading-none">VP</span>
+                  <span class="text-sky-600 text-xs font-bold block mt-1 tracking-wide">phong.pro</span>
+              </div>
+          </a>
+          
+          <div class="hidden md:flex items-center gap-8 text-sm font-bold text-gray-500 uppercase tracking-wide">
+              <a href="/" class="hover:text-cyan-600 transition">TRANG CHỦ</a>
+              <a href="/user/vps" class="hover:text-cyan-600 transition">QUẢN LÝ VPS</a>
+              <a href="/user/account" class="hover:text-cyan-600 transition">TÀI KHOẢN</a>
+          </div>
+          
+          <div class="flex gap-2.5 items-center ml-auto md:ml-0">
+              <span class="hidden md:inline font-black text-emerald-600 mr-2 text-lg"><%= user.balance.toLocaleString() %>đ</span>
+              <a href="/" class="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2 rounded-xl text-sm font-black transition shadow-lg shadow-sky-500/30 whitespace-nowrap">MUA VPS</a>
+              <span class="inline-flex items-center"><%- include('account-gear-dropdown', { gearSuffix: 'Hdr' }) %></span>
+          </div>
+      </div>
+  </nav>
+
+  <!-- BANNER -->
+  <section class="hero-bg text-white py-12 md:py-16 relative overflow-hidden">
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+      <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+              <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full mb-4 border border-white/20 shadow-inner shadow-white/10">
+                  <span class="text-xl">🥷</span>
+                  <span class="text-sm font-bold tracking-widest text-sky-50 uppercase"><%= (typeof headerSubtitle !== 'undefined') ? headerSubtitle : 'Bảng Điều Khiển' %></span>
+              </div>
+              <h1 class="text-3xl md:text-5xl font-black leading-tight tracking-tight"><%= (typeof headerTitle !== 'undefined') ? headerTitle : 'Khu vực Thành Viên' %></h1>
+          </div>
+          <div class="flex gap-3 mt-4 md:mt-0">
+              <a href="/" class="bg-white text-sky-600 px-6 py-3 rounded-full text-xs font-black uppercase tracking-wider hover:scale-105 transition shadow-2xl shadow-cyan-900/50">Khuyến Mãi Gọi Lời</a>
+              <a href="/user/vps" class="bg-transparent border border-white/30 text-white px-6 py-3 rounded-full text-xs font-black uppercase tracking-wider hover:bg-white/10 transition backdrop-blur-sm hidden sm:block">Danh sách Cloud</a>
+          </div>
+      </div>
+      <!-- Ninja decoration -->
+      <div class="absolute -bottom-10 -right-4 text-8xl opacity-[0.08] ninja-icon pointer-events-none drop-shadow-2xl">🥷</div>
+  </section>
+
+  <div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="min-h-[calc(100vh-16rem)]">

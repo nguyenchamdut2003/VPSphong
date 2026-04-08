@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Ký - vpsphong.pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Press+Start+2P&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .logo-text { font-family: 'Press Start 2P', sans-serif; background: linear-gradient(90deg, #67e8f9, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-bg { background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); }
+    .ninja-icon { animation: float 3s ease-in-out infinite; }
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(12deg); }
+        50% { transform: translateY(-10px) rotate(15deg); }
+        100% { transform: translateY(0px) rotate(12deg); }
+    }
+  </style>
+</head>
+<body class="hero-bg min-h-screen text-gray-800 flex flex-col relative overflow-hidden">
+  
+  <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+  
+  <!-- Ninja decoration -->
+  <div class="absolute -bottom-8 -right-8 text-[12rem] opacity-[0.08] ninja-icon pointer-events-none drop-shadow-2xl">🥷</div>
+  <div class="absolute top-12 left-8 text-8xl opacity-[0.08] rotate-12 ninja-icon pointer-events-none">🥷</div>
+
+  <!-- NAVBAR -->
+  <nav class="bg-white/95 backdrop-blur-md border-b border-sky-100 sticky top-0 z-50 shadow-sm">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <a href="/" class="flex flex-shrink-0 items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-sky-600 rounded-xl flex items-center justify-center text-xl shadow-xl border-2 border-white rotate-12 ninja-icon">🥷</div>
+              <div>
+                  <span class="logo-text text-xl md:text-2xl tracking-tighter block leading-none">VP</span>
+                  <span class="text-sky-600 text-xs font-bold block mt-1 tracking-wide">phong.pro</span>
+              </div>
+          </a>
+          
+          <div class="hidden md:flex items-center gap-8 text-sm font-bold text-gray-500 uppercase tracking-wide">
+              <a href="/" class="hover:text-cyan-600 transition">TRANG CHỦ</a>
+          </div>
+          
+          <div class="flex gap-2.5 items-center ml-auto md:ml-0">
+              <a href="/login" class="text-sky-600 hover:bg-sky-50 px-5 py-2.5 rounded-2xl text-sm font-black transition">Đăng Nhập Ngay</a>
+          </div>
+      </div>
+  </nav>
+
+  <!-- Register Form Background -->
+  <div class="flex-grow flex items-center justify-center p-6 mt-4 relative z-10">
+    <div class="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl border border-sky-100 p-8 md:p-10 relative overflow-hidden pb-12 mb-10">
+      
+      <div class="text-center mb-8 relative z-10">
+        <div class="w-16 h-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-sky-100 shadow-sm rotate-3"><i class="fa-solid fa-user-ninja"></i></div>
+        <h2 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Tạo Tài Khoản</h2>
+        <p class="text-gray-500 font-medium">Đăng ký để thuê VPS giá siêu hời chỉ trong 1 phút</p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %> 
+        <div class="bg-rose-50 text-rose-600 px-4 py-3 rounded-2xl font-bold mb-6 flex items-center gap-2 border border-rose-100 shadow-sm">
+          <i class="fa-solid fa-circle-exclamation text-lg"></i>
+          <%= error %>
+        </div> 
+      <% } %>
+
+      <form action="/register" method="POST" class="relative z-10 space-y-5">
+        <div>
+          <label class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Tên đăng nhập (Username)</label>
+          <input type="text" name="username" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-bold" placeholder="Nhập tên tài khoản viết liền không dấu" required>
+        </div>
+        <div>
+          <label class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Hộp thư điện tử (Email)</label>
+          <input type="email" name="email" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-bold" placeholder="mail@example.com" required>
+        </div>
+        <div>
+          <label class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Số Điện Thoại (SĐT)</label>
+          <input type="text" name="phone" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-bold" placeholder="0987123456" required>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5 pt-2 border-t border-gray-100">
+            <div>
+              <label class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Mật khẩu</label>
+              <input type="password" name="password" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-bold" placeholder="••••••••" required>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Nhập lại Mật khẩu</label>
+              <input type="password" name="confirmPassword" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-bold" placeholder="••••••••" required>
+            </div>
+        </div>
+        
+        <button type="submit" class="w-full py-4 text-white bg-sky-500 hover:bg-sky-600 rounded-2xl font-black text-lg shadow-xl shadow-sky-500/30 transition-all mt-8 uppercase tracking-widest group border border-sky-400">
+          Đăng Ký Khởi Tạo <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform ml-1"></i>
+        </button>
+      </form>
+      
+      <div class="mt-8 text-center text-gray-500 font-medium relative z-10">
+        Bạn đã là thành viên? <a href="/login" class="text-sky-600 font-black hover:underline">Quét thẻ đăng nhập</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

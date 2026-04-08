@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Khách Hàng - VPS Phong Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="flex min-h-screen text-sm">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed shadow-xl z-20">
+    <div class="px-6 py-5 bg-gray-800 text-xl font-bold tracking-widest text-center border-b border-gray-700">AdminPanel</div>
+    <nav class="flex-1 mt-6 space-y-2 px-4">
+      <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
+      </a>
+      <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
+      </a>
+      <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-ticket w-5"></i> Voucher
+      </a>
+      <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+        <i class="fa-solid fa-users w-5"></i> Danh sách Khách
+      </a>
+      <a href="/admin/logs" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-clock-rotate-left w-5"></i> Báo cáo Log
+      </a>
+      <a href="/admin/settings/support" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-headset w-5"></i> Liên hệ hỗ trợ
+      </a>
+    </nav>
+    <div class="p-6">
+      <a href="/" class="block w-full py-3 text-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition"><i class="fa-solid fa-house"></i> Về Website</a>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg border-l-4 border-blue-500 pl-3">Dữ Liệu Người Khách</div>
+      <div class="flex items-center gap-5">
+         <span class="font-bold text-gray-900 px-3 py-1 bg-gray-100 rounded-lg"><i class="fa-solid fa-shield-halved text-blue-500 mr-2"></i><%= typeof admin !== 'undefined' ? admin.username : 'Admin' %></span>
+         <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-5 font-bold">Họ Tên / Username</th>
+              <th class="px-6 py-5 font-bold">Liên Lạc</th>
+              <th class="px-6 py-5 font-bold">Thống kê Tài khoản</th>
+              <th class="px-6 py-5 font-bold">Cấm Cửa</th>
+              <th class="px-6 py-5 font-bold">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-gray-800">
+            <% users.forEach(u => { %>
+              <tr class="hover:bg-blue-50/50 transition">
+                <td class="px-6 py-5 font-bold text-lg text-gray-900 flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl"><%= u.username.charAt(0).toUpperCase() %></div>
+                  <%= u.username %>
+                </td>
+                <td class="px-6 py-5 text-sm text-gray-600">
+                   <div><i class="fa-regular fa-envelope text-gray-400 mr-1"></i> <%= u.email %></div>
+                   <div class="mt-1 font-mono"><i class="fa-solid fa-phone text-gray-400 mr-1"></i> <%= u.phone || 'Chưa cung cấp' %></div>
+                </td>
+                <td class="px-6 py-5 font-extrabold text-emerald-600 text-base"><%= u.balance.toLocaleString() %> VND</td>
+                <td class="px-6 py-5">
+                   <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold <%= u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' %>">
+                      <%= u.isActive ? 'Bình Thường' : 'Bị Khóa Acc' %>
+                   </span>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-2">
+                    <a href="/admin/users/<%= u._id %>" class="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition shadow-sm">Xem Log & VPS</a>
+                    <form action="/admin/users/toggle-lock" method="POST">
+                      <input type="hidden" name="blockUserId" value="<%= u._id %>">
+                      <button class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-200 rounded-lg text-xs font-bold transition shadow-sm">
+                        <%= u.isActive ? 'Khóa Dùng' : 'Mở Khóa Lại' %>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

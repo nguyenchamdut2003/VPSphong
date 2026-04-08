@@ -1,0 +1,14 @@
+<% const sfx = typeof gearSuffix !== 'undefined' ? gearSuffix : 'main'; %>
+<% const sideBar = sfx === 'Side'; %>
+<div class="dropdown">
+  <button type="button" class="gear-dropdown-btn w-9 h-9 rounded-lg border inline-flex items-center justify-center shrink-0 <%= sideBar ? 'border-slate-600 bg-slate-800 text-cyan-200 hover:bg-slate-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' %>" id="gearBtn<%= sfx %>" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" title="Cài đặt tài khoản" aria-label="Cài đặt tài khoản">
+    <i class="fa-solid fa-gear"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end shadow-lg border border-gray-200 py-2" style="min-width: 14rem;" aria-labelledby="gearBtn<%= sfx %>">
+    <li><h6 class="dropdown-header text-uppercase small text-muted px-3 mb-1">Quản lý tài khoản</h6></li>
+    <li><a class="dropdown-item py-2 px-3" href="/user/account?tab=info"><i class="fa-solid fa-id-card text-cyan-600 me-2 w-5 text-center"></i> Thông tin tài khoản</a></li>
+    <li><a class="dropdown-item py-2 px-3" href="/user/account?tab=password"><i class="fa-solid fa-key text-blue-600 me-2 w-5 text-center"></i> Đổi mật khẩu</a></li>
+    <li><button type="button" class="dropdown-item py-2 px-3 w-100 text-start border-0 bg-transparent" data-bs-toggle="modal" data-bs-target="#modalDeveloping" data-dev-msg="Xác thực 2 bước đang phát triển."><i class="fa-solid fa-shield-halved text-amber-600 me-2 w-5 text-center"></i> Xác thực 2 bước</button></li>
+    <li><a class="dropdown-item py-2 px-3" href="/user/account?tab=activity"><i class="fa-solid fa-clock-rotate-left text-indigo-600 me-2 w-5 text-center"></i> Lịch sử hoạt động</a></li>
+  </ul>
+</div>

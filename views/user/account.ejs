@@ -1,0 +1,177 @@
+<%- include('partials/panel-start', {
+  user,
+  activeNav: 'account',
+  pageTitle: 'Quản lý tài khoản',
+  headerTitle: 'Tài khoản',
+  headerSubtitle: 'Quản lý tài khoản'
+}) %>
+
+<% const t = tab || 'info'; %>
+<% const pwErrMap = {
+  empty: 'Vui lòng điền đủ các ô.',
+  short: 'Mật khẩu mới tối thiểu 6 ký tự.',
+  mismatch: 'Mật khẩu mới và xác nhận không khớp.',
+  current: 'Mật khẩu hiện tại không đúng.',
+  nouser: 'Không tìm thấy tài khoản.',
+  server: 'Lỗi hệ thống, thử lại sau.'
+}; %>
+<% const au = typeof accountUser !== 'undefined' && accountUser ? accountUser : user; %>
+
+<div class="grid gap-6 lg:grid-cols-12 max-w-6xl mx-auto">
+  <div class="lg:col-span-4">
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/80">
+        <h2 class="text-base font-extrabold text-gray-900">Quản lý tài khoản</h2>
+        <p class="text-[11px] text-gray-500 mt-1">Đổi thông tin nếu nghi ngờ bị truy cập trái phép.</p>
+      </div>
+      <nav class="p-2 space-y-0.5">
+        <a href="/user/account?tab=info" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition <%= t === 'info' ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25' : 'text-gray-700 hover:bg-gray-50' %>">
+          <% if (t === 'info') { %><i class="fa-solid fa-chevron-right text-xs opacity-80"></i><% } else { %><span class="w-3"></span><% } %>
+          Thông tin tài khoản
+        </a>
+        <a href="/user/account?tab=password" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition <%= t === 'password' ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25' : 'text-gray-700 hover:bg-gray-50' %>">
+          <% if (t === 'password') { %><i class="fa-solid fa-chevron-right text-xs opacity-80"></i><% } else { %><span class="w-3"></span><% } %>
+          Đổi mật khẩu
+        </a>
+        <a href="/user/account?tab=twofa" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition <%= t === 'twofa' ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25' : 'text-gray-700 hover:bg-gray-50' %>">
+          <% if (t === 'twofa') { %><i class="fa-solid fa-chevron-right text-xs opacity-80"></i><% } else { %><span class="w-3"></span><% } %>
+          Xác thực 2 bước
+        </a>
+        <a href="/user/account?tab=activity" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition <%= t === 'activity' ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25' : 'text-gray-700 hover:bg-gray-50' %>">
+          <% if (t === 'activity') { %><i class="fa-solid fa-chevron-right text-xs opacity-80"></i><% } else { %><span class="w-3"></span><% } %>
+          Lịch sử hoạt động
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="lg:col-span-8">
+    <% if (t === 'info') { %>
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
+      <h3 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3 mb-6">Thông tin tài khoản</h3>
+      <div class="space-y-4 max-w-xl">
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Tên hiển thị</label>
+          <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700" value="<%= au.username %>">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Tên tài khoản</label>
+          <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700" value="<%= au.username %>">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Địa chỉ email</label>
+          <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700" value="<%= au.email || '—' %>">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Số điện thoại</label>
+          <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700" value="<%= au.phone || '—' %>">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Địa chỉ IP (phiên hiện tại)</label>
+          <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-gray-700" value="<%= clientIp || '—' %>">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Thiết bị / trình duyệt</label>
+          <textarea readonly rows="2" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-600 resize-none"><%= userAgent %></textarea>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-4 pt-2">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Số dư</label>
+            <input type="text" readonly class="w-full bg-cyan-50 border border-cyan-100 rounded-xl px-4 py-2.5 text-sm font-bold text-cyan-700" value="<%= (au.balance != null ? au.balance : 0).toLocaleString() %> đ">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Tổng nạp</label>
+            <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800" value="<%= (typeof totalDeposit !== 'undefined' ? totalDeposit : 0).toLocaleString() %> đ">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Tổng tiêu</label>
+            <input type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800" value="<%= (typeof totalSpent !== 'undefined' ? totalSpent : 0).toLocaleString() %> đ">
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 flex justify-end">
+        <button type="button" class="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-extrabold transition shadow-lg shadow-cyan-500/20" data-bs-toggle="modal" data-bs-target="#modalDeveloping" data-dev-msg="Cập nhật hồ sơ qua form đang phát triển. Liên hệ admin nếu cần sửa email/SĐT.">
+          Lưu thông tin
+        </button>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (t === 'password') { %>
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
+      <h3 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3 mb-6">Đổi mật khẩu</h3>
+      <% if (pwOk) { %>
+      <div class="mb-4 p-4 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-800 text-sm font-semibold">Đổi mật khẩu thành công.</div>
+      <% } %>
+      <% if (pwError && pwErrMap[pwError]) { %>
+      <div class="mb-4 p-4 rounded-xl bg-red-50 border border-red-100 text-red-800 text-sm font-semibold"><%= pwErrMap[pwError] %></div>
+      <% } %>
+      <form action="/user/account/password" method="POST" class="space-y-4 max-w-md">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu hiện tại</label>
+          <input type="password" name="currentPassword" required autocomplete="current-password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-cyan-500/30">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu mới</label>
+          <input type="password" name="newPassword" required minlength="6" autocomplete="new-password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-cyan-500/30">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nhập lại mật khẩu mới</label>
+          <input type="password" name="confirmPassword" required minlength="6" autocomplete="new-password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-cyan-500/30">
+        </div>
+        <button type="submit" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-extrabold transition">Đổi mật khẩu</button>
+      </form>
+    </div>
+    <% } %>
+
+    <% if (t === 'twofa') { %>
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
+      <h3 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3 mb-4">Xác thực 2 bước</h3>
+      <div class="rounded-xl border border-amber-100 bg-amber-50/80 p-4 text-sm text-amber-900 mb-6">
+        <p class="font-bold mb-1">Đang phát triển</p>
+        <p class="text-amber-800/90">Xác thực hai bước (2FA) qua email hoặc ứng dụng sẽ được bổ sung sau. Hiện tại bạn chỉ cần mật khẩu để đăng nhập.</p>
+      </div>
+      <button type="button" class="px-6 py-3 rounded-xl bg-gray-200 text-gray-600 text-sm font-bold cursor-not-allowed" disabled>Trạng thái 2FA — sắp có</button>
+    </div>
+    <% } %>
+
+    <% if (t === 'activity') { %>
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3">Lịch sử hoạt động</h3>
+        <p class="text-xs text-gray-500 mt-1">Thao tác trên VPS của bạn. <a href="/user/logs" class="text-blue-600 font-semibold hover:underline">Mở trang đầy đủ</a></p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-xs md:text-sm">
+          <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] border-b border-gray-100">
+            <tr>
+              <th class="px-5 py-3 font-bold">ID</th>
+              <th class="px-5 py-3 font-bold">Nội dung</th>
+              <th class="px-5 py-3 font-bold">IP VPS</th>
+              <th class="px-5 py-3 font-bold">Thời gian</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% (activityLogs || []).forEach((log, idx) => {
+                 const lip = log.userVpsId && log.userVpsId.ip ? log.userVpsId.ip : '—';
+                 const line = [log.action, log.description].filter(Boolean).join(' — ');
+            %>
+            <tr class="hover:bg-gray-50/80">
+              <td class="px-5 py-3 font-semibold"><%= idx + 1 %></td>
+              <td class="px-5 py-3 text-gray-700 max-w-md"><%= line || '—' %></td>
+              <td class="px-5 py-3 font-mono text-[11px] text-blue-700"><%= lip %></td>
+              <td class="px-5 py-3 text-gray-600 whitespace-nowrap"><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td>
+            </tr>
+            <% }) %>
+            <% if (!(activityLogs || []).length) { %>
+            <tr><td colspan="4" class="px-5 py-10 text-center text-gray-500 font-medium">Chưa có hoạt động</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/panel-end') %>

@@ -1,0 +1,139 @@
+<%- include('partials/panel-start', {
+  user,
+  activeNav: 'history',
+  pageTitle: 'Lịch sử giao dịch',
+  headerTitle: 'Quản Lý Dịch Vụ',
+  headerSubtitle: 'Quản Lý Cloud VPS'
+}) %>
+
+<div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-100">
+    <h2 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3">Lịch Sử Giao Dịch</h2>
+    <p class="text-xs text-gray-500 mt-1">Nạp tiền, mua VPS, gia hạn</p>
+  </div>
+
+  <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-50 bg-gray-50/50">
+    <div class="flex items-center gap-2 text-xs text-gray-600">
+      <span>Show</span>
+      <select id="histPageSize" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white outline-none focus:ring-2 focus:ring-blue-500/30">
+        <option value="10" selected>10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="9999">All</option>
+      </select>
+      <span>entries</span>
+    </div>
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-gray-600 font-medium">Search:</span>
+      <input type="search" id="histSearch" class="border border-gray-200 rounded-lg px-3 py-1.5 text-xs w-full md:w-56 outline-none focus:ring-2 focus:ring-blue-500/30" placeholder="Loại, IP, mô tả..." autocomplete="off">
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-left text-xs md:text-sm">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] tracking-wide border-b border-gray-100">
+        <tr>
+          <th class="px-5 py-3 font-bold">ID</th>
+          <th class="px-5 py-3 font-bold">Thời gian</th>
+          <th class="px-5 py-3 font-bold">Loại</th>
+          <th class="px-5 py-3 font-bold">VPS / Ghi chú</th>
+          <th class="px-5 py-3 font-bold">Số tiền</th>
+          <th class="px-5 py-3 font-bold">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody id="histBody" class="divide-y divide-gray-100">
+        <% transactions.forEach((tx, idx) => {
+             const typeLabel = tx.type === 'deposit' ? 'nạp tiền' : (tx.type === 'payment' ? 'mua mới' : 'gia hạn');
+             const ip = tx.userVpsId && tx.userVpsId.ip ? tx.userVpsId.ip : '';
+             const blob = [typeLabel, ip, (tx.description || '')].join(' ').toLowerCase();
+        %>
+        <tr class="hist-row hover:bg-gray-50/80" data-search="<%= blob %>">
+          <td class="px-5 py-3 font-semibold hist-id"><%= idx + 1 %></td>
+          <td class="px-5 py-3 text-gray-600 whitespace-nowrap"><%= new Date(tx.createdAt).toLocaleString('vi-VN') %></td>
+          <td class="px-5 py-3">
+            <% if (tx.type === 'deposit') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-cyan-100 text-cyan-800">Nạp tiền</span><% } %>
+            <% if (tx.type === 'payment') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-blue-100 text-blue-800">Mua mới</span><% } %>
+            <% if (tx.type === 'renew') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-indigo-100 text-indigo-800">Gia hạn</span><% } %>
+          </td>
+          <td class="px-5 py-3">
+            <div class="font-mono text-[11px] text-gray-600"><%= ip || '—' %></div>
+            <div class="text-[11px] text-gray-400 truncate max-w-[220px]"><%= tx.description || '' %></div>
+          </td>
+          <td class="px-5 py-3 font-bold <%= tx.type === 'deposit' ? 'text-cyan-600' : 'text-red-600' %>">
+            <%= tx.type === 'deposit' ? '+' : '-' %><%= tx.amount.toLocaleString() %> đ
+          </td>
+          <td class="px-5 py-3"><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-gray-100 text-gray-700"><%= tx.status %></span></td>
+        </tr>
+        <% }) %>
+        <% if (transactions.length === 0) { %>
+        <tr><td colspan="6" class="px-5 py-10 text-center text-gray-500 font-medium">Chưa có giao dịch</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (transactions.length) { %>
+  <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-100 bg-gray-50/50 text-xs text-gray-600">
+    <div id="histInfo">Showing 0 to 0 of 0 entries</div>
+    <div class="flex items-center gap-2">
+      <button type="button" id="histPrev" class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none">Previous</button>
+      <span id="histPage" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-white font-bold text-xs">1</span>
+      <button type="button" id="histNext" class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none">Next</button>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<% if (transactions.length) { %>
+<script>
+(function () {
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr.hist-row'));
+  var sizeEl = document.getElementById('histPageSize');
+  var searchEl = document.getElementById('histSearch');
+  var page = 1;
+
+  function filtered() {
+    var q = (searchEl.value || '').trim().toLowerCase();
+    return rows.filter(function (r) {
+      var b = (r.getAttribute('data-search') || '').toLowerCase();
+      return !q || b.indexOf(q) !== -1;
+    });
+  }
+
+  function render() {
+    var all = filtered();
+    var size = parseInt(sizeEl.value, 10) || 10;
+    var total = all.length;
+    var pages = Math.max(1, Math.ceil(total / size));
+    if (page > pages) page = pages;
+    var start = total === 0 ? 0 : (page - 1) * size + 1;
+    var end = Math.min(page * size, total);
+
+    rows.forEach(function (r) { r.classList.add('hidden'); });
+    all.forEach(function (r, i) {
+      var c = r.querySelector('.hist-id');
+      if (c) c.textContent = String(i + 1);
+      if (i >= (page - 1) * size && i < page * size) r.classList.remove('hidden');
+    });
+
+    document.getElementById('histInfo').textContent = total === 0 ? 'Showing 0 to 0 of 0 entries' : ('Showing ' + start + ' to ' + end + ' of ' + total + ' entries');
+    document.getElementById('histPage').textContent = String(page);
+    document.getElementById('histPrev').disabled = page <= 1;
+    document.getElementById('histNext').disabled = page >= pages || total === 0;
+  }
+
+  sizeEl.addEventListener('change', function () { page = 1; render(); });
+  searchEl.addEventListener('input', function () { page = 1; render(); });
+  document.getElementById('histPrev').addEventListener('click', function () { if (page > 1) { page--; render(); } });
+  document.getElementById('histNext').addEventListener('click', function () {
+    var all = filtered();
+    var sz = parseInt(sizeEl.value, 10) || 10;
+    var pages = Math.max(1, Math.ceil(all.length / sz));
+    if (page < pages) { page++; render(); }
+  });
+  render();
+})();
+</script>
+<% } %>
+
+<%- include('partials/panel-end') %>

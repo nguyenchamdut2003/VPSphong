@@ -1,0 +1,231 @@
+<%- include('partials/panel-start', {
+  user,
+  activeNav: 'bank',
+  pageTitle: 'Nạp ngân hàng',
+  headerTitle: 'Quản Lý Dịch Vụ',
+  headerSubtitle: 'Chuyển khoản ngân hàng'
+}) %>
+
+<div class="space-y-6">
+  <!-- Thông tin CK + VietQR -->
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3">Nạp tiền vào tài khoản</h2>
+      <p class="text-xs text-gray-500 mt-1">Chuyển khoản ngân hàng — nội dung bắt buộc: <strong class="text-red-600"><%= (vietqr && vietqr.prefix) || 'SEVQR' %> + tên đăng nhập</strong></p>
+    </div>
+
+    <div class="p-6">
+      <% 
+        const sevqrContent = 'SEVQR ' + user.username;
+        const addInfoDisplay = (vietqr && vietqr.addInfo) ? vietqr.addInfo : sevqrContent;
+      %>
+
+      <% if (vietqr && vietqr.enabled) { %>
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="space-y-4 text-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b border-gray-100">
+            <span class="text-gray-500 font-semibold">Ngân hàng</span>
+            <span class="font-bold text-gray-900"><%= vietqr.bankLabel %></span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b border-gray-100">
+            <span class="text-gray-500 font-semibold">Số tài khoản</span>
+            <span class="font-mono font-extrabold text-blue-700 flex items-center gap-2 flex-wrap">
+              <%= vietqr.accountNo %>
+              <button type="button" class="copy-ck text-[11px] px-2 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" data-copy="<%= vietqr.accountNo %>"><i class="fa-regular fa-copy"></i></button>
+            </span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 py-2 border-b border-gray-100">
+            <span class="text-gray-500 font-semibold shrink-0">Chủ tài khoản</span>
+            <span class="font-bold text-gray-900 text-right"><%= vietqr.accountName %></span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 py-2 border-b border-gray-100">
+            <span class="text-gray-500 font-semibold shrink-0">Tối thiểu nạp</span>
+            <span class="font-bold text-gray-900"><%= Number(minDeposit || 0).toLocaleString() %> VNĐ</span>
+          </div>
+          <div class="rounded-xl bg-red-50 border border-red-100 p-4">
+            <div class="text-xs font-bold text-red-800 uppercase tracking-wide mb-1">Nội dung chuyển khoản (bắt buộc)</div>
+            <p class="text-sm text-red-900 mb-2">Ghi đúng một dòng sau (có khoảng trắng sau <code class="bg-white/80 px-1 rounded"><%= vietqr.prefix %></code>):</p>
+            <div class="flex flex-wrap items-center gap-2">
+              <code class="text-base font-mono font-extrabold text-red-700 bg-white px-3 py-2 rounded-lg border border-red-200 break-all"><%= addInfoDisplay %></code>
+              <button type="button" class="copy-ck shrink-0 px-3 py-2 rounded-xl bg-cyan-500 text-white text-xs font-bold hover:bg-cyan-600" data-copy="<%= addInfoDisplay %>">Sao chép</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-sm font-semibold text-gray-700 mb-3"><i class="fa-solid fa-qrcode text-cyan-600 mr-2"></i>Quét mã VietQR</p>
+          <div class="rounded-3xl border border-gray-200 bg-white p-3 shadow-inner">
+            <img src="<%= vietqr.imageUrl %>" alt="VietQR" class="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] object-contain" width="260" height="260" loading="lazy" />
+          </div>
+          <p class="text-[11px] text-gray-500 mt-3 text-center max-w-xs">Nội dung trong QR đã khớp <strong><%= vietqr.prefix %> <%= user.username %></strong>. Chỉ cần nhập số tiền trên app ngân hàng.</p>
+        </div>
+      </div>
+      <% } else { %>
+      <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 mb-4">
+        <p class="font-bold mb-2">Cấu hình VietQR chưa đủ — vẫn chuyển khoản thủ công theo thông tin admin cung cấp.</p>
+        <p class="mb-2">Nội dung chuyển khoản <strong>bắt buộc</strong>:</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <code class="text-lg font-mono font-extrabold text-red-700 bg-white px-3 py-2 rounded-lg border"><%= sevqrContent %></code>
+          <button type="button" class="copy-ck px-3 py-2 rounded-xl bg-cyan-500 text-white text-xs font-bold" data-copy="<%= sevqrContent %>">Sao chép</button>
+        </div>
+        <p class="text-xs mt-3 text-amber-800">Admin đặt <code class="bg-white/70 px-1 rounded">VIETQR_BANK_CODE</code>, <code class="bg-white/70 px-1 rounded">VIETQR_ACCOUNT_NO</code>, <code class="bg-white/70 px-1 rounded">VIETQR_ACCOUNT_NAME</code> trong .env để hiện QR.</p>
+      </div>
+      <% } %>
+
+      <div class="mt-6 pt-6 border-t border-gray-100">
+        <p class="text-xs font-bold text-gray-500 uppercase mb-2">Nạp thử nhanh (demo — cộng tiền trong hệ thống)</p>
+        <form action="/user/deposit" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-xl">
+          <input type="number" name="amount" min="10000" step="1000" required placeholder="Số tiền (tối thiểu 10.000)" class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30">
+          <button type="submit" class="px-6 py-3 rounded-xl bg-gray-900 hover:bg-blue-600 text-white text-sm font-extrabold transition shrink-0">Nạp demo</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lịch sử nạp tiền -->
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-lg font-extrabold text-gray-900 border-l-4 border-blue-500 pl-3">Lịch sử nạp tiền</h2>
+      <p class="text-xs text-gray-500 mt-1">Chỉ hiển thị giao dịch loại nạp tiền</p>
+    </div>
+
+    <% if (!deposits.length) { %>
+    <div class="p-10 text-center text-gray-500 text-sm font-medium">Chưa có lần nạp nào</div>
+    <% } else { %>
+    <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-50 bg-gray-50/50">
+      <div class="flex items-center gap-2 text-xs text-gray-600">
+        <span>Show</span>
+        <select id="depPageSize" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white outline-none focus:ring-2 focus:ring-blue-500/30">
+          <option value="10" selected>10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="9999">All</option>
+        </select>
+        <span>entries</span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-gray-600 font-medium">Search:</span>
+        <input type="search" id="depSearch" class="border border-gray-200 rounded-lg px-3 py-1.5 text-xs w-full md:w-56 outline-none focus:ring-2 focus:ring-blue-500/30" placeholder="Mã, số tiền..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left text-xs md:text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] tracking-wide border-b border-gray-100">
+          <tr>
+            <th class="px-5 py-3 font-bold">ID</th>
+            <th class="px-5 py-3 font-bold">Mã giao dịch</th>
+            <th class="px-5 py-3 font-bold">Số tiền</th>
+            <th class="px-5 py-3 font-bold">Trạng thái</th>
+            <th class="px-5 py-3 font-bold">Ngân hàng</th>
+            <th class="px-5 py-3 font-bold">Thời gian nạp</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% const bankCol = (vietqr && vietqr.enabled) ? vietqr.bankLabel : '—'; %>
+          <% deposits.forEach((tx, idx) => {
+               const hx = String(tx._id || '').replace(/[^a-f0-9]/gi, '');
+               const tail = hx.slice(-8);
+               const mcode = tail ? ((parseInt(tail, 16) % 9000) + 1000) : '—';
+               const tStr = new Date(tx.createdAt).toLocaleString('vi-VN');
+               const blob = (String(mcode) + ' ' + tx.amount + ' ' + (tx.description || '')).toLowerCase();
+               const st = tx.status || '';
+               const isOk = st === 'success';
+          %>
+          <tr class="dep-row hover:bg-gray-50/80" data-search="<%= blob %>">
+            <td class="px-5 py-3 font-semibold dep-id"><%= idx + 1 %></td>
+            <td class="px-5 py-3 font-mono font-bold text-cyan-700"><%= mcode %></td>
+            <td class="px-5 py-3 font-bold text-gray-900"><%= tx.amount.toLocaleString() %>đ</td>
+            <td class="px-5 py-3">
+              <% if (isOk) { %>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-cyan-100 text-cyan-800">Đã duyệt</span>
+              <% } else if (st === 'pending') { %>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">Chờ xử lý</span>
+              <% } else { %>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-700"><%= st %></span>
+              <% } %>
+            </td>
+            <td class="px-5 py-3 text-gray-700"><% if ((tx.description || '').indexOf('Nạp tiền vào tài khoản') !== -1) { %>Nạp trên web (demo)<% } else { %><%= bankCol %><% } %></td>
+            <td class="px-5 py-3 text-gray-600 whitespace-nowrap"><%= tStr %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-100 bg-gray-50/50 text-xs text-gray-600">
+      <div id="depInfo">Showing 0 to 0 of 0 entries</div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="depPrev" class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none">Previous</button>
+        <span id="depPageNum" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-white font-bold text-xs">1</span>
+        <button type="button" id="depNext" class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none">Next</button>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.copy-ck').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var t = btn.getAttribute('data-copy') || '';
+    var label = btn.innerHTML;
+    function ok() {
+      btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+      setTimeout(function () { btn.innerHTML = label; }, 1400);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(ok).catch(function () {});
+    }
+  });
+});
+<% if (deposits.length) { %>
+(function () {
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr.dep-row'));
+  var sizeEl = document.getElementById('depPageSize');
+  var searchEl = document.getElementById('depSearch');
+  var page = 1;
+
+  function filtered() {
+    var q = (searchEl.value || '').trim().toLowerCase();
+    return rows.filter(function (r) {
+      return !q || (r.getAttribute('data-search') || '').indexOf(q) !== -1;
+    });
+  }
+
+  function render() {
+    var all = filtered();
+    var size = parseInt(sizeEl.value, 10) || 10;
+    var total = all.length;
+    var pages = Math.max(1, Math.ceil(total / size));
+    if (page > pages) page = pages;
+    var start = total === 0 ? 0 : (page - 1) * size + 1;
+    var end = Math.min(page * size, total);
+
+    rows.forEach(function (r) { r.classList.add('hidden'); });
+    all.forEach(function (r, i) {
+      var c = r.querySelector('.dep-id');
+      if (c) c.textContent = String(i + 1);
+      if (i >= (page - 1) * size && i < page * size) r.classList.remove('hidden');
+    });
+
+    document.getElementById('depInfo').textContent = total === 0 ? 'Showing 0 to 0 of 0 entries' : ('Showing ' + start + ' to ' + end + ' of ' + total + ' entries');
+    document.getElementById('depPageNum').textContent = String(page);
+    document.getElementById('depPrev').disabled = page <= 1;
+    document.getElementById('depNext').disabled = page >= pages || total === 0;
+  }
+
+  sizeEl.addEventListener('change', function () { page = 1; render(); });
+  searchEl.addEventListener('input', function () { page = 1; render(); });
+  document.getElementById('depPrev').addEventListener('click', function () { if (page > 1) { page--; render(); } });
+  document.getElementById('depNext').addEventListener('click', function () {
+    var all = filtered();
+    var sz = parseInt(sizeEl.value, 10) || 10;
+    var pages = Math.max(1, Math.ceil(all.length / sz));
+    if (page < pages) { page++; render(); }
+  });
+  render();
+})();
+<% } %>
+</script>
+
+<%- include('partials/panel-end') %>

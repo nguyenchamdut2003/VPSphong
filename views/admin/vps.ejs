@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Gói VPS - VPS Phong Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="flex min-h-screen text-sm">
+
+  <aside class="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed shadow-xl z-20">
+    <div class="px-6 py-5 bg-gray-800 text-xl font-bold tracking-widest text-center border-b border-gray-700">AdminPanel</div>
+    <nav class="flex-1 mt-6 space-y-2 px-4">
+      <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
+      </a>
+      <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+        <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
+      </a>
+      <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-ticket w-5"></i> Voucher
+      </a>
+      <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-users w-5"></i> Danh sách Khách
+      </a>
+      <a href="/admin/logs" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-clock-rotate-left w-5"></i> Báo cáo Log
+      </a>
+      <a href="/admin/settings/support" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-headset w-5"></i> Liên hệ hỗ trợ
+      </a>
+    </nav>
+    <div class="p-6">
+      <a href="/" class="block w-full py-3 text-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition"><i class="fa-solid fa-house"></i> Về Website</a>
+    </div>
+  </aside>
+
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg">Cấu Hình Sản Phẩm</div>
+      <div class="flex items-center gap-5">
+         <span class="font-bold text-gray-900 px-3 py-1 bg-gray-100 rounded-lg"><i class="fa-solid fa-shield-halved text-blue-500 mr-2"></i><%= typeof admin !== 'undefined' ? admin.username : 'Admin' %></span>
+         <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1">
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 font-semibold"><%= error %></div>
+      <% } %>
+
+      <!-- Loại VPS -->
+      <h2 class="text-xl font-extrabold text-gray-800 mb-4 border-l-4 border-indigo-500 pl-3">Loại VPS</h2>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-10">
+        <div class="flex flex-col md:flex-row gap-4 md:items-end mb-6">
+          <form action="/admin/vps/category/add" method="POST" class="flex flex-wrap gap-3 items-end flex-1">
+            <div class="flex-1 min-w-[200px]">
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tên loại (vd: VPS Việt, VPS ngoại)</label>
+              <input type="text" name="name" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-semibold" placeholder="VPS Việt Nam" required>
+            </div>
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition"><i class="fa-solid fa-folder-plus mr-2"></i> Thêm loại</button>
+          </form>
+        </div>
+        <% if (categories && categories.length) { %>
+          <div class="flex flex-wrap gap-2">
+            <% categories.forEach(c => { %>
+              <div class="inline-flex items-center gap-2 pl-4 pr-2 py-2 rounded-xl bg-gray-100 border border-gray-200">
+                <span class="font-bold text-gray-800"><%= c.name %></span>
+                <form action="/admin/vps/category/delete" method="POST" class="inline" onsubmit="return confirm('Xóa loại này? Chỉ xóa được khi chưa gán cho VPS nào.');">
+                  <input type="hidden" name="categoryId" value="<%= c._id %>">
+                  <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="text-gray-500 font-medium">Chưa có loại nào — hãy tạo ít nhất một loại trước khi thêm VPS.</p>
+        <% } %>
+      </div>
+
+      <h2 class="text-2xl font-extrabold text-gray-800 mb-2 border-l-4 border-blue-500 pl-3">Thêm VPS</h2>
+      <p class="text-sm text-gray-500 mb-6 ml-1">Tên hiển thị trên web lấy theo <strong>loại VPS</strong>. Mã máy: <code class="bg-gray-100 px-1 rounded text-gray-800">#vpsphong</code> + số thứ tự.</p>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+        <form action="/admin/vps/add" method="POST" class="grid grid-cols-1 md:grid-cols-12 gap-5" id="vps-form">
+          <div class="md:col-span-6">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Loại VPS <span class="text-red-500">*</span></label>
+            <select name="categoryId" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+              <option value="">— Chọn loại —</option>
+              <% (categories || []).forEach(c => { %>
+                <option value="<%= c._id %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="md:col-span-6">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Giá (VNĐ) <span class="text-red-500">*</span></label>
+            <input type="number" name="price" min="0" step="1000" class="w-full bg-blue-50 border border-blue-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-800" required>
+          </div>
+
+          <div class="md:col-span-12">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Kiểu gói (mục trên trang chủ) <span class="text-red-500">*</span></label>
+            <select name="productKind" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+              <option value="game">Treo game (Game Server)</option>
+              <option value="blank" selected>VPS trắng nguyên gốc</option>
+              <option value="datacenter">IP Datacenter (quốc tế)</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPU (core)</label>
+            <input type="number" name="cpu" min="1" max="256" value="2" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">RAM (GB)</label>
+            <input type="number" name="ram" min="1" max="1024" value="4" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">SSD (GB)</label>
+            <input type="number" name="disk" min="10" max="10000" value="40" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Băng thông (GB)</label>
+            <input type="number" name="bandwidth" min="0" step="1" placeholder="Tuỳ chọn" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+          </div>
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Chu kỳ gia hạn (ngày)</label>
+            <input type="number" name="billingCycleDays" min="1" max="365" value="30" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+          </div>
+
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">IP máy chủ <span class="text-red-500">*</span></label>
+            <input type="text" name="serverIp" class="w-full bg-amber-50 border border-amber-200 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none font-mono font-semibold" required placeholder="103.x.x.x">
+          </div>
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">User SSH</label>
+            <input type="text" name="serverUsername" value="root" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono">
+          </div>
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <input id="adminVpsPw" type="password" name="serverPassword" autocomplete="new-password" class="w-full bg-gray-50 border border-gray-200 p-3 pr-12 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono" required placeholder="Mật khẩu SSH">
+              <button type="button" id="toggleFormPw" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 p-2 rounded-lg" title="Ẩn / hiện" aria-label="Ẩn hiện mật khẩu"><i class="fa-regular fa-eye"></i></button>
+            </div>
+          </div>
+
+          <div class="md:col-span-12 border-t border-gray-100 pt-5">
+            <p class="text-xs font-bold text-gray-500 uppercase mb-3">Thời gian thuê lần đầu (sau khi khách mua)</p>
+            <div class="flex flex-wrap gap-6 mb-4">
+              <label class="inline-flex items-center gap-2 cursor-pointer font-semibold text-gray-700">
+                <input type="radio" name="durationKind" value="days" checked class="accent-blue-600" onchange="toggleDuration()">
+                Theo số ngày
+              </label>
+              <label class="inline-flex items-center gap-2 cursor-pointer font-semibold text-gray-700">
+                <input type="radio" name="durationKind" value="until_date" class="accent-blue-600" onchange="toggleDuration()">
+                Đến ngày cố định
+              </label>
+            </div>
+            <div class="grid md:grid-cols-12 gap-4">
+              <div class="md:col-span-4" id="wrap-days">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Số ngày thuê đầu tiên</label>
+                <input type="number" name="initialRentDays" min="1" max="3650" value="30" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+              </div>
+              <div class="md:col-span-4 hidden" id="wrap-until">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Hết hạn vào ngày</label>
+                <input type="date" name="rentValidUntil" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+              </div>
+            </div>
+          </div>
+
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Vị trí IP (Location)</label>
+            <input type="text" name="ipLocation" class="w-full bg-blue-50 border border-blue-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-blue-800" placeholder="vd: Singapore" value="Singapore">
+          </div>
+
+          <div class="md:col-span-8">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Hệ điều hành / Danh sách tính năng</label>
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-2 max-h-40 overflow-y-auto">
+              <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                <% if(availableFeatures && availableFeatures.length) { %>
+                  <% availableFeatures.forEach((feat, idx) => { %>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-blue-600 transition">
+                      <input type="checkbox" name="features" value="<%= feat %>" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 accent-blue-600">
+                      <span><%= feat %></span>
+                    </label>
+                  <% }) %>
+                <% } else { %>
+                  <p class="text-sm text-gray-400 font-medium italic col-span-full">Chưa có tính năng mẫu nào được lưu, hãy thêm ở bên dưới.</p>
+                <% } %>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+               <input type="text" name="newFeature" class="flex-1 bg-white border border-gray-200 p-2 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nhập Hệ điều hành hoặc Tính năng mới...">
+               <span class="text-[11px] text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i> Sẽ gán vào gói này và lưu cho lần sau.</span>
+            </div>
+          </div>
+
+          <div class="md:col-span-6">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mô tả nội bộ</label>
+            <textarea name="description" rows="4" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ghi chú nội bộ dành cho Admin"></textarea>
+          </div>
+
+          <div class="md:col-span-12">
+            <button type="submit" class="bg-gray-900 text-white w-full py-4 uppercase rounded-xl font-bold hover:bg-blue-600 transition shadow-lg">
+              <i class="fa-solid fa-floppy-disk mr-2"></i> Lưu VPS
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-left border-collapse text-xs md:text-sm">
+          <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider border-b border-gray-200">
+            <tr>
+              <th class="px-4 py-4 font-bold">Loại</th>
+              <th class="px-4 py-4 font-bold">Kiểu gói</th>
+              <th class="px-4 py-4 font-bold">Mã VPS</th>
+              <th class="px-4 py-4 font-bold">IP</th>
+              <th class="px-4 py-4 font-bold">Cấu hình</th>
+              <th class="px-4 py-4 font-bold">Giá</th>
+              <th class="px-4 py-4 font-bold">Hạn đầu</th>
+              <th class="px-4 py-4 font-bold">Mật khẩu</th>
+              <th class="px-4 py-4 font-bold">Trạng thái</th>
+              <th class="px-4 py-4 font-bold">Hành động</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-gray-800">
+            <% vpsList.forEach(vps => { %>
+              <% const vpsCode = (typeof vps.saleCode === 'number' && vps.saleCode > 0) ? ('#vpsphong' + vps.saleCode) : ('#vpsphong' + String(vps._id).slice(-6)); %>
+              <% const pk = vps.productKind || 'blank'; %>
+              <% const pkLabel = pk === 'game' ? 'Treo game' : (pk === 'datacenter' ? 'Datacenter' : 'VPS trắng'); %>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-4 font-bold text-indigo-600"><%= vps.categoryId ? vps.categoryId.name : '—' %></td>
+                <td class="px-4 py-4 text-gray-700 font-semibold text-xs"><%= pkLabel %></td>
+                <td class="px-4 py-4 font-mono font-extrabold text-blue-800"><%= vpsCode %></td>
+                <td class="px-4 py-4 font-mono text-blue-700"><%= vps.serverIp || '—' %></td>
+                <td class="px-4 py-4 font-mono text-gray-600"><%= vps.cpu %>C / <%= vps.ram %>G / <%= vps.disk %>G</td>
+                <td class="px-4 py-4 font-extrabold text-blue-600"><%= (vps.price != null ? vps.price : 0).toLocaleString() %> đ</td>
+                <td class="px-4 py-4 text-gray-600">
+                  <% if (vps.durationKind === 'until_date' && vps.rentValidUntil) { %>
+                    Đến <%= new Date(vps.rentValidUntil).toLocaleDateString('vi-VN') %>
+                  <% } else { %>
+                    <%= vps.initialRentDays || 30 %> ngày
+                  <% } %>
+                </td>
+                <td class="px-4 py-4 admin-pw-cell max-w-[200px]">
+                  <% if (vps.plainPassword) { %>
+                  <div class="flex items-center gap-2">
+                    <span class="admin-pw-masked font-mono text-xs text-gray-500 select-none">••••••••</span>
+                    <span class="admin-pw-plain hidden font-mono text-xs text-gray-900 break-all"><%= vps.plainPassword %></span>
+                    <button type="button" class="admin-pw-toggle shrink-0 text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-gray-100" title="Ẩn / hiện"><i class="fa-regular fa-eye"></i></button>
+                  </div>
+                  <% } else { %>
+                  <span class="text-gray-400">—</span>
+                  <% } %>
+                </td>
+                <td class="px-4 py-4">
+                  <% if (vps.isSold) { %>
+                    <span class="px-2 py-1 rounded-md text-xs font-bold bg-slate-200 text-slate-700">Đã bán</span>
+                  <% } else if (vps.status) { %>
+                    <span class="px-2 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-700">Đang bán</span>
+                  <% } else { %>
+                    <span class="px-2 py-1 rounded-md text-xs font-bold bg-gray-200 text-gray-600">Ngừng bán</span>
+                  <% } %>
+                </td>
+                <td class="px-4 py-4">
+                  <% if (!vps.isSold) { %>
+                    <form action="/admin/vps/toggle" method="POST">
+                      <input type="hidden" name="vpsId" value="<%= vps._id %>">
+                      <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold border <%= vps.status ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' %>">
+                        <%= vps.status ? 'Ngừng bán' : 'Mở bán' %>
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <span class="text-gray-400 text-xs">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (!vpsList.length) { %>
+              <tr><td colspan="10" class="text-center py-8 text-gray-400 font-medium">Chưa có VPS nào</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <script>
+    function toggleDuration() {
+      const until = document.querySelector('input[name="durationKind"][value="until_date"]').checked;
+      document.getElementById('wrap-days').classList.toggle('hidden', until);
+      document.getElementById('wrap-until').classList.toggle('hidden', !until);
+    }
+    toggleDuration();
+
+    (function () {
+      var btn = document.getElementById('toggleFormPw');
+      var inp = document.getElementById('adminVpsPw');
+      if (btn && inp) {
+        btn.addEventListener('click', function () {
+          var icon = btn.querySelector('i');
+          if (inp.type === 'password') {
+            inp.type = 'text';
+            icon.className = 'fa-regular fa-eye-slash';
+          } else {
+            inp.type = 'password';
+            icon.className = 'fa-regular fa-eye';
+          }
+        });
+      }
+      document.querySelectorAll('.admin-pw-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var cell = btn.closest('.admin-pw-cell');
+          if (!cell) return;
+          var masked = cell.querySelector('.admin-pw-masked');
+          var plain = cell.querySelector('.admin-pw-plain');
+          var icon = btn.querySelector('i');
+          if (!masked || !plain) return;
+          if (plain.classList.contains('hidden')) {
+            plain.classList.remove('hidden');
+            masked.classList.add('hidden');
+            icon.className = 'fa-regular fa-eye-slash';
+          } else {
+            plain.classList.add('hidden');
+            masked.classList.remove('hidden');
+            icon.className = 'fa-regular fa-eye';
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

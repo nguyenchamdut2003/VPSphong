@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Khách Hàng - VPS Phong Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="flex min-h-screen text-sm">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed shadow-xl z-20">
+    <div class="px-6 py-5 bg-gray-800 text-xl font-bold tracking-widest text-center border-b border-gray-700">AdminPanel</div>
+    <nav class="flex-1 mt-6 space-y-2 px-4">
+      <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
+      </a>
+      <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
+      </a>
+      <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-ticket w-5"></i> Voucher
+      </a>
+      <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+        <i class="fa-solid fa-users w-5"></i> Danh sách Khách
+      </a>
+      <a href="/admin/logs" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-clock-rotate-left w-5"></i> Báo cáo Log
+      </a>
+      <a href="/admin/settings/support" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-headset w-5"></i> Liên hệ hỗ trợ
+      </a>
+    </nav>
+    <div class="p-6">
+      <a href="/" class="block w-full py-3 text-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition"><i class="fa-solid fa-house"></i> Về Website</a>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg border-l-4 border-blue-500 pl-3">Trang Hồ Sơ Riêng Biết</div>
+      <div class="flex items-center gap-5">
+         <span class="font-bold text-gray-900 px-3 py-1 bg-gray-100 rounded-lg"><i class="fa-solid fa-shield-halved text-blue-500 mr-2"></i><%= typeof admin !== 'undefined' ? admin.username : 'Admin' %></span>
+         <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1">
+      <div class="mb-4 flex justify-between items-center bg-white p-5 shadow-sm rounded-2xl border border-gray-100">
+        <h4 class="mb-0 text-gray-500 font-medium">Hồ sơ: <span class="text-blue-600 font-bold text-xl ml-1"><%= targetUser.username %></span></h4>
+        <a href="/admin/users" class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-5 py-2.5 rounded-lg font-bold transition">Trở Về</a>
+      </div>
+
+      <!-- Danh sách VPS -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-600"><i class="fa-solid fa-server mr-2"></i> VPS Người Này Mua</div>
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-white text-gray-400 text-xs uppercase tracking-wider border-b border-gray-200">
+            <tr><th class="px-6 py-4">Tên Gói</th><th class="px-6 py-4">IP</th><th class="px-6 py-4">Tài khoản SSH</th><th class="px-6 py-4">Ngày Hết Hạn</th><th class="px-6 py-4">Trạng thái</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-gray-800">
+            <% userVpsList.forEach(uv => { %>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 font-bold text-gray-900"><%= uv.vpsId ? uv.vpsId.name : '-' %></td>
+                <td class="px-6 py-4 font-bold text-blue-600"><%= uv.ip %></td>
+                <td class="px-6 py-4 font-mono text-xs bg-gray-50 rounded"><span class="text-gray-500">U:</span> <%= uv.username %> <br> <span class="text-gray-500">P:</span> <%= uv.password %></td>
+                <td class="px-6 py-4 font-bold text-red-500"><%= new Date(uv.expireDate).toLocaleDateString("vi-VN") %></td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 rounded-md text-xs font-bold uppercase <%= uv.status==='running'?'bg-emerald-100 text-emerald-700':(uv.status==='expired'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700') %>"><%= uv.status %></span>
+                </td>
+              </tr>
+            <% }) %>
+            <% if(userVpsList.length === 0){ %><tr><td colspan="5" class="text-center py-6 text-gray-400 font-medium">Chưa sở hữu máy chủ nào</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Log của riêng 1 user -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-900 text-white font-bold border-b border-gray-800"><i class="fa-solid fa-shoe-prints mr-2 text-gray-400"></i> Lịch Sử Thao Tác Cá Nhân</div>
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-white text-gray-400 text-xs uppercase tracking-wider border-b border-gray-200">
+            <tr><th class="px-6 py-4">Thời Gian</th><th class="px-6 py-4">Lệnh</th><th class="px-6 py-4">Diễn Giải</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-gray-800">
+            <% userLogs.forEach(log => { %>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 text-xs font-mono text-gray-500"><%= new Date(log.createdAt).toLocaleString("vi-VN") %></td>
+                <td class="px-6 py-4 text-xs font-bold"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg uppercase shadow-sm border border-gray-200"><%= log.action %></span></td>
+                <td class="px-6 py-4 text-gray-600"><%= log.description %></td>
+              </tr>
+            <% }) %>
+            <% if(userLogs.length === 0){ %><tr><td colspan="3" class="text-center py-6 text-gray-400 font-medium">Bạn này chưa thao tác gì cả</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</body>
+</html>

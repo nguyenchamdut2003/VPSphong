@@ -1,0 +1,49 @@
+    </div>
+  </div>
+</div>
+<%- include('support-float') %>
+<%- include('panel-bootstrap-modal') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+  var input = document.getElementById('sidebarMenuSearch');
+  if (input) {
+    input.addEventListener('input', function () {
+      var q = (input.value || '').trim().toLowerCase();
+      document.querySelectorAll('#sidebarNav .nav-item').forEach(function (el) {
+        var label = (el.getAttribute('data-nav-label') || el.textContent || '').toLowerCase();
+        el.style.display = !q || label.indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+  }
+  document.querySelectorAll('[data-bs-target="#modalDeveloping"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var msg = el.getAttribute('data-dev-msg');
+      var body = document.getElementById('modalDevelopingBody');
+      if (body) {
+        body.textContent = msg || 'Tính năng đang phát triển. Vui lòng quay lại sau.';
+      }
+    });
+  });
+
+  var sub = document.getElementById('cloudVpsSubmenu');
+  var cloudBtn = document.getElementById('cloudVpsToggle');
+  var chev = document.getElementById('cloudVpsChevron');
+  if (cloudBtn && sub) {
+    function setCloudOpen(open) {
+      sub.classList.toggle('hidden', !open);
+      cloudBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (chev) chev.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)';
+    }
+    var stored = localStorage.getItem('vpsphong_cloud_open');
+    setCloudOpen(stored !== '0');
+    cloudBtn.addEventListener('click', function () {
+      var open = sub.classList.contains('hidden');
+      setCloudOpen(open);
+      localStorage.setItem('vpsphong_cloud_open', open ? '1' : '0');
+    });
+  }
+})();
+</script>
+</body>
+</html>
