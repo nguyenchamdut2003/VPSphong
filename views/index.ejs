@@ -27,7 +27,7 @@
             <a href="/" class="flex flex-shrink-0 items-center gap-3">
                 <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-sky-600 rounded-2xl flex items-center justify-center text-3xl shadow-xl border-4 border-white rotate-12 ninja-icon">🥷</div>
                 <div>
-                    <span class="logo-text text-2xl md:text-4xl tracking-tighter block leading-none">VP</span>
+                    <span class="logo-text text-2xl md:text-4xl tracking-tighter block leading-none">VPS</span>
                     <span class="text-sky-600 text-sm md:text-lg font-bold block mt-1 tracking-wide">phong.pro</span>
                 </div>
             </a>
@@ -142,9 +142,9 @@
               }
             %>
 
-            <div class="bg-white rounded-[2rem] shadow-2xl shadow-sky-900/5 p-8 md:p-10 max-w-4xl mx-auto border border-sky-100 relative overflow-hidden user-vps-pw-cell">
+            <div class="bg-white rounded-[2rem] shadow-2xl shadow-sky-900/5 p-8 md:p-10 max-w-6xl mx-auto border border-sky-100 relative overflow-hidden user-vps-pw-cell">
                 <div class="absolute top-0 right-0 p-8 text-sky-50 pointer-events-none"><i class="fa-solid fa-server text-8xl"></i></div>
-                <div class="border border-gray-100 bg-gray-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                <div class="border border-gray-100 bg-gray-50 rounded-2xl p-6 md:p-8 flex flex-col lg:flex-row justify-between lg:items-center gap-8 relative z-10">
                     <div>
                         <div class="flex items-center gap-3 mb-2">
                            <div class="w-2.5 h-2.5 rounded-full <%= d_statusColor %> <%= d_statusAnim %>"></div>
@@ -200,7 +200,7 @@
                 <div class="md:col-span-1 flex flex-col items-center md:items-start">
                   <div class="flex items-center gap-3 mb-6">
                       <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-sky-600 rounded-xl flex items-center justify-center text-2xl rotate-12 ninja-icon font-bold">🥷</div>
-                      <span class="logo-text text-3xl font-black">VPphong</span>
+                      <span class="logo-text text-3xl font-black">VPSphong</span>
                   </div>
                   <p class="text-sm font-medium text-gray-400 leading-relaxed mb-6">Chiến game thật phê, quản lý siêu dễ! Dịch vụ Cloud Server tối ưu hàng đầu tại Việt Nam.</p>
                 </div>
@@ -266,12 +266,12 @@
                 
                 const formattedPrice = Math.floor(total / 1000) + 'k';
                 const location = vps.ipLocation || 'Singapore';
-                const shortSpecsHtml = `<p class="text-[11px] text-gray-500 font-bold mt-2 tracking-wide uppercase">\${vps.disk}GB SSD • IP \${location}</p>`;
+                const shortSpecsHtml = `<p class="text-[11px] text-gray-500 font-bold mt-2 tracking-wide uppercase">${vps.disk}GB SSD • IP ${location}</p>`;
 
                 let featuresHtml = '';
                 if (vps.features && vps.features.length > 0) {
                     vps.features.forEach(f => {
-                        featuresHtml += `<li><span class="inline-flex items-center justify-center bg-emerald-50/70 text-emerald-600 text-[10.5px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-square-check mr-1.5 text-emerald-500 opacity-80 text-xs"></i> \${f}</span></li>`;
+                        featuresHtml += `<li><span class="inline-flex items-center justify-center bg-emerald-50/70 text-emerald-600 text-[10.5px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-square-check mr-1.5 text-emerald-500 opacity-80 text-xs"></i> ${f}</span></li>`;
                     });
                 } else {
                     featuresHtml = `<li><span class="inline-flex items-center justify-center bg-gray-50 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-square-check mr-1.5 text-gray-400 text-xs"></i> Cơ bản</span></li>`;
@@ -279,29 +279,33 @@
 
                 const div = document.createElement('div');
                 div.className = "bg-white flex flex-col border border-cyan-100/50 rounded-[2rem] p-7 text-center hover:border-cyan-400 hover:shadow-[0_10px_40px_-10px_rgba(0,188,212,0.3)] transition-all duration-300 relative group";
+                
+                const stockBadgeElement = vps.stock ? `<div class="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm border border-emerald-200">Còn ${vps.stock}</div>` : '';
+
                 div.innerHTML = `
+                    ${stockBadgeElement}
                     <div class="mb-5">
-                      <h3 class="text-xl font-bold text-gray-800 leading-tight">\${vps.name}</h3>
-                      \${shortSpecsHtml}
+                      <h3 class="text-xl font-bold text-gray-800 leading-tight">${vps.name}</h3>
+                      ${shortSpecsHtml}
                     </div>
                     
                     <div class="my-3 flex justify-center items-end gap-1">
-                      <span class="text-[2.75rem] font-black text-[#00a8cc] tracking-tighter leading-none">\${formattedPrice}</span>
-                      <span class="text-[13px] font-medium text-[#00a8cc] pb-1">/ \${currentMonth} tháng</span>
+                      <span class="text-[2.75rem] font-black text-[#00a8cc] tracking-tighter leading-none">${formattedPrice}</span>
+                      <span class="text-[13px] font-medium text-[#00a8cc] pb-1">/ ${currentMonth} tháng</span>
                     </div>
                     
                     <ul class="flex flex-col items-center gap-2.5 flex-1 pt-6 pb-6 border-t border-dashed border-gray-100 mt-2">
-                        \${featuresHtml}
+                        ${featuresHtml}
                     </ul>
                     
                     <form action="/user/buy-vps" method="POST" class="mt-auto relative w-full">
-                        <input type="hidden" name="vpsId" value="\${vps._id}">
-                        <input type="hidden" name="months" value="\${currentMonth}">
-                        \${isLogged ? \`
+                        <input type="hidden" name="vpsId" value="${vps._id}">
+                        <input type="hidden" name="months" value="${currentMonth}">
+                        ${isLogged ? `
                             <button type="submit" class="w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</button>
-                        \` : \`
+                        ` : `
                             <a href="/login" class="flex items-center justify-center w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</a>
-                        \`}
+                        `}
                     </form>
                 `;
                 container.appendChild(div);

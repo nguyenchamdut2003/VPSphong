@@ -14,7 +14,21 @@ module.exports.getHome = async (req, res) => {
       filter.$or = [{ productKind: "blank" }, { productKind: { $exists: false } }, { productKind: null }];
     }
 
-    const listVps = await tb_vpsModel.find(filter).populate("categoryId").sort({ createdAt: -1 });
+    const listVpsRaw = await tb_vpsModel.find(filter).populate("categoryId").sort({ createdAt: -1 });
+    
+    // Group identical VPS packages
+    const groupedMap = {};
+    for (let vps of listVpsRaw) {
+      const sig = `${vps.name}_${vps.cpu}_${vps.ram}_${vps.disk}_${vps.price}_${vps.ipLocation}`;
+      if (!groupedMap[sig]) {
+        groupedMap[sig] = vps.toObject ? vps.toObject() : { ...vps };
+        groupedMap[sig].stock = 1;
+      } else {
+        groupedMap[sig].stock += 1;
+      }
+    }
+    const listVps = Object.values(groupedMap);
+
 
     let filterKind = "";
     let filterCategoryName = "";
