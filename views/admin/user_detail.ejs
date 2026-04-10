@@ -58,12 +58,19 @@
         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-600"><i class="fa-solid fa-server mr-2"></i> VPS Người Này Mua</div>
         <table class="w-full text-left border-collapse">
           <thead class="bg-white text-gray-400 text-xs uppercase tracking-wider border-b border-gray-200">
-            <tr><th class="px-6 py-4">Tên Gói</th><th class="px-6 py-4">IP</th><th class="px-6 py-4">Tài khoản SSH</th><th class="px-6 py-4">Ngày Hết Hạn</th><th class="px-6 py-4">Trạng thái</th></tr>
+            <tr><th class="px-6 py-4">Tên Gói</th><th class="px-6 py-4">Tên hiển thị (admin)</th><th class="px-6 py-4">IP</th><th class="px-6 py-4">Tài khoản SSH</th><th class="px-6 py-4">Ngày Hết Hạn</th><th class="px-6 py-4">Trạng thái</th></tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-800">
             <% userVpsList.forEach(uv => { %>
               <tr class="hover:bg-gray-50 transition">
                 <td class="px-6 py-4 font-bold text-gray-900"><%= uv.vpsId ? uv.vpsId.name : '-' %></td>
+                <td class="px-6 py-4">
+                  <form action="/admin/users/<%= targetUser._id %>/vps-rename" method="POST" class="flex gap-2 items-center">
+                    <input type="hidden" name="userVpsId" value="<%= uv._id %>">
+                    <input type="text" name="displayName" maxlength="80" value="<%= uv.displayName || '' %>" placeholder="<%= uv.vpsId ? uv.vpsId.name : 'Đặt tên hiển thị' %>" class="w-56 border border-gray-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500/20">
+                    <button type="submit" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold uppercase">Lưu</button>
+                  </form>
+                </td>
                 <td class="px-6 py-4 font-bold text-blue-600"><%= uv.ip %></td>
                 <td class="px-6 py-4 font-mono text-xs bg-gray-50 rounded"><span class="text-gray-500">U:</span> <%= uv.username %> <br> <span class="text-gray-500">P:</span> <%= uv.password %></td>
                 <td class="px-6 py-4 font-bold text-red-500"><%= new Date(uv.expireDate).toLocaleDateString("vi-VN") %></td>
@@ -72,7 +79,7 @@
                 </td>
               </tr>
             <% }) %>
-            <% if(userVpsList.length === 0){ %><tr><td colspan="5" class="text-center py-6 text-gray-400 font-medium">Chưa sở hữu máy chủ nào</td></tr><% } %>
+            <% if(userVpsList.length === 0){ %><tr><td colspan="6" class="text-center py-6 text-gray-400 font-medium">Chưa sở hữu máy chủ nào</td></tr><% } %>
           </tbody>
         </table>
       </div>

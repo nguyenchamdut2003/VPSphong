@@ -6,6 +6,7 @@ const tb_vps_category = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     isActive: { type: Boolean, default: true },
+    isHidden: { type: Boolean, default: false },
   },
   {
     collection: "vps_categories",
@@ -97,6 +98,8 @@ const tb_transaction = new mongoose.Schema(
     /** Giá gốc gói trước giảm (khi dùng voucher) */
     originalAmount: { type: Number },
     discountAmount: { type: Number, default: 0 },
+    /** Mã đơn số tăng dần toàn hệ thống (nạp / mua / gia hạn) */
+    orderNumber: { type: Number, sparse: true, unique: true },
   },
   {
     collection: "transactions",
@@ -105,6 +108,15 @@ const tb_transaction = new mongoose.Schema(
 );
 tb_transaction.index({ userId: 1, createdAt: -1 });
 tb_transaction.index({ userVpsId: 1, createdAt: -1 });
+
+/** Bộ đếm mã đơn (atomic) */
+const tb_counter = new mongoose.Schema(
+  {
+    _id: { type: String, required: true },
+    seq: { type: Number, default: 0 },
+  },
+  { collection: "counters" },
+);
 
 /** VPS đã bán / đang thuê của khách; autoRenew + renewalPeriodDays phục vụ thanh toán tự động */
 const tb_user_vps = new mongoose.Schema(
@@ -177,6 +189,7 @@ const tb_voucher = new mongoose.Schema(
     expiresAt: { type: Date, default: null },
     minOrderAmount: { type: Number, default: 0, min: 0 },
     isActive: { type: Boolean, default: true },
+    isHidden: { type: Boolean, default: false },
     note: { type: String, default: "" },
   },
   {
@@ -207,6 +220,7 @@ let tb_vpsModel = db.mongoose.model("vps", tb_vps);
 let tb_vps_logModel = db.mongoose.model("vps_logs", tb_vps_log);
 let tb_site_settingsModel = db.mongoose.model("site_settings", tb_site_settings);
 let tb_voucherModel = db.mongoose.model("vouchers", tb_voucher);
+let tb_counterModel = db.mongoose.model("counters", tb_counter);
 
 module.exports = {
   tb_userModel,
@@ -217,4 +231,5 @@ module.exports = {
   tb_vps_logModel,
   tb_site_settingsModel,
   tb_voucherModel,
+  tb_counterModel,
 };

@@ -1,4 +1,4 @@
-const { tb_vpsModel, tb_userModel, tb_vps_categoryModel, tb_user_vpsModel } = require("../models/vpsphong");
+const { tb_vpsModel, tb_userModel, tb_vps_categoryModel, tb_user_vpsModel, tb_transactionModel } = require("../models/vpsphong");
 
 module.exports.getHome = async (req, res) => {
   try {
@@ -50,11 +50,22 @@ module.exports.getHome = async (req, res) => {
       demoVps = await tb_user_vpsModel.findOne({ userId: req.session.userId }).populate({ path: 'vpsId', populate: { path: 'categoryId' } }).sort({ createdAt: -1 });
     }
 
+    let demoPurchaseOrderNumber = null;
+    if (demoVps) {
+      const payTx = await tb_transactionModel
+        .findOne({ userVpsId: demoVps._id, type: "payment", status: "success" })
+        .sort({ createdAt: -1 })
+        .select("orderNumber")
+        .lean();
+      if (payTx && typeof payTx.orderNumber === "number") demoPurchaseOrderNumber = payTx.orderNumber;
+    }
+
     res.render("index", {
       vpsPackages: listVps,
       user,
       isAdmin,
       demoVps,
+      demoPurchaseOrderNumber,
       filterKind,
       filterCategoryName,
     });

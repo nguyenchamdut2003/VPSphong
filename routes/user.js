@@ -9,7 +9,7 @@ const { getVpsExpiryNotifications } = require('../utils/vpsExpiryNotifications')
 router.use(requireLogin);
 router.use(async (req, res, next) => {
   try {
-    res.locals.customerCategories = await tb_vps_categoryModel.find().sort({ name: 1 }).lean();
+    res.locals.customerCategories = await tb_vps_categoryModel.find({ isHidden: { $ne: true } }).sort({ name: 1 }).lean();
     res.locals.supportSettings = await getSiteSettings();
     res.locals.expiryNotifications = await getVpsExpiryNotifications(res.locals.user._id);
   } catch (e) {

@@ -33,7 +33,8 @@
     <table class="min-w-full text-left text-xs md:text-sm">
       <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] tracking-wide border-b border-gray-100">
         <tr>
-          <th class="px-5 py-3 font-bold">ID</th>
+          <th class="px-5 py-3 font-bold">STT</th>
+          <th class="px-5 py-3 font-bold">Mã đơn</th>
           <th class="px-5 py-3 font-bold">Thời gian</th>
           <th class="px-5 py-3 font-bold">Loại</th>
           <th class="px-5 py-3 font-bold">VPS / Ghi chú</th>
@@ -45,10 +46,12 @@
         <% transactions.forEach((tx, idx) => {
              const typeLabel = tx.type === 'deposit' ? 'nạp tiền' : (tx.type === 'payment' ? 'mua mới' : 'gia hạn');
              const ip = tx.userVpsId && tx.userVpsId.ip ? tx.userVpsId.ip : '';
-             const blob = [typeLabel, ip, (tx.description || '')].join(' ').toLowerCase();
+             const ord = (typeof tx.orderNumber === 'number' && tx.orderNumber > 0) ? String(tx.orderNumber) : '';
+             const blob = [typeLabel, ip, ord, (tx.description || '')].join(' ').toLowerCase();
         %>
         <tr class="hist-row hover:bg-gray-50/80" data-search="<%= blob %>">
           <td class="px-5 py-3 font-semibold hist-id"><%= idx + 1 %></td>
+          <td class="px-5 py-3 font-mono font-bold text-cyan-800 hist-ord"><%= ord || '—' %></td>
           <td class="px-5 py-3 text-gray-600 whitespace-nowrap"><%= new Date(tx.createdAt).toLocaleString('vi-VN') %></td>
           <td class="px-5 py-3">
             <% if (tx.type === 'deposit') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-cyan-100 text-cyan-800">Nạp tiền</span><% } %>
@@ -66,7 +69,7 @@
         </tr>
         <% }) %>
         <% if (transactions.length === 0) { %>
-        <tr><td colspan="6" class="px-5 py-10 text-center text-gray-500 font-medium">Chưa có giao dịch</td></tr>
+        <tr><td colspan="7" class="px-5 py-10 text-center text-gray-500 font-medium">Chưa có giao dịch</td></tr>
         <% } %>
       </tbody>
     </table>
@@ -113,6 +116,7 @@
     all.forEach(function (r, i) {
       var c = r.querySelector('.hist-id');
       if (c) c.textContent = String(i + 1);
+      /* Cột mã đơn giữ nguyên theo DB, không đánh lại STT mã */
       if (i >= (page - 1) * size && i < page * size) r.classList.remove('hidden');
     });
 

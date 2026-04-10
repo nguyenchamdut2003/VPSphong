@@ -12,17 +12,25 @@
         <p class="text-lg text-gray-500 font-medium">Bạn hoàn toàn làm chủ server VPS với các thao tác click đơn giản.</p>
     </div>
 
+    <div class="mb-8 rounded-2xl border border-amber-200 bg-amber-50/90 px-5 py-4 text-sm text-amber-950 shadow-sm">
+        <p class="font-bold text-amber-900 mb-1"><i class="fa-solid fa-screwdriver-wrench mr-2 text-amber-600"></i>Bật / tắt / khởi động lại do shop xử lý thủ công</p>
+        <p class="text-amber-900/90 leading-relaxed">Yêu cầu chỉ được thực hiện khi admin online. Trang sẽ hiện trạng thái &quot;đang gửi&quot; — nếu <strong>lâu không khởi động lại</strong> hoặc máy không đúng ý, vui lòng <strong>nhắn tin admin</strong> báo lỗi kèm mã máy / IP để được xử lý.</p>
+    </div>
+
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 bg-sky-50/50 p-4 rounded-[2rem] border border-sky-100">
         <div class="flex items-center gap-3">
             <a href="/" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-sky-700 text-sm font-black hover:bg-sky-50 shadow-sm border border-sky-200 transition">
                 <i class="fa-solid fa-cart-plus"></i> Đăng Ký VPS Mới
             </a>
         </div>
-        <div class="relative max-w-sm w-full">
+        <div class="relative w-full md:max-w-md">
             <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-sky-500">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
-            <input type="search" id="vpsTableSearch" class="block w-full p-3 pl-10 text-sm font-bold text-gray-900 bg-white border border-sky-200 rounded-full focus:ring-4 focus:ring-sky-500/20 focus:border-sky-400 outline-none transition" placeholder="Tìm theo IP, Tên gói, ID...">
+            <input type="search" id="vpsTableSearch" class="block w-full py-3.5 pl-11 pr-11 text-sm font-bold text-gray-900 bg-white border border-sky-200 rounded-full focus:ring-4 focus:ring-sky-500/20 focus:border-sky-400 outline-none transition" placeholder="Tìm theo IP, tên gói, mã máy...">
+            <button type="button" id="vpsClearSearch" class="hidden absolute inset-y-0 right-0 px-4 text-gray-400 hover:text-gray-600" aria-label="Xóa tìm kiếm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
     </div>
 
@@ -50,12 +58,13 @@
                 ? ('#vpsphong' + vid.saleCode)
                 : (vid ? ('#vpsphong' + String(vid._id).slice(-6)) : '#unknown');
             const vpsName = vid ? vid.name : 'VPS Tùy Chọn';
+            const titleName = (uv.displayName && String(uv.displayName).trim()) ? String(uv.displayName).trim() : vpsName;
             const catName = (vid && vid.categoryId && vid.categoryId.name) ? vid.categoryId.name : '';
             const ip = uv.ip || '';
             const cfg = vid ? (vid.cpu + 'C / ' + vid.ram + 'G / ' + vid.disk + 'G') : '—';
             const sshUser = (uv.username && String(uv.username).trim()) || 'root';
             const plainPw = (uv.password && String(uv.password)) || '';
-            const searchBlob = (vpsName + ' ' + vpsCode + ' ' + catName + ' ' + ip).toLowerCase();
+            const searchBlob = (titleName + ' ' + vpsName + ' ' + vpsCode + ' ' + catName + ' ' + ip).toLowerCase();
             
             let statusDot = 'bg-gray-400';
             let statusAnim = '';
@@ -78,13 +87,16 @@
             
             <div class="border border-gray-100 bg-gray-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
                 <div class="flex-1 w-full md:w-auto">
-                    <div class="flex items-center gap-3 mb-2">
+                    <div class="flex flex-wrap items-center gap-3 mb-1">
                         <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-gray-200 shadow-sm text-[10px] font-black uppercase tracking-wider text-gray-500">
                            <div class="w-2.5 h-2.5 rounded-full <%= statusDot %> <%= statusAnim %>"></div>
                            <%= statusText %>
                         </div>
-                        <h3 class="font-black text-xl md:text-2xl text-gray-900 tracking-tight"><%= vpsName %> <span class="text-sky-600 text-lg ml-1"><%= vpsCode %></span></h3>
+                        <h3 class="font-black text-xl md:text-2xl text-gray-900 tracking-tight"><%= titleName %> <span class="text-sky-600 text-lg ml-1"><%= vpsCode %></span></h3>
                     </div>
+                    <% if (titleName !== vpsName) { %>
+                    <p class="text-xs text-gray-500 font-medium mb-2">Theo gói: <%= vpsName %></p>
+                    <% } %>
                     
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 font-medium mb-4">
                         <% if(catName) { %><span class="bg-sky-100 text-sky-700 px-2.5 py-0.5 rounded uppercase tracking-wider text-[11px] font-bold"><%= catName %></span><% } %>
@@ -114,23 +126,24 @@
                             <% } %>
                         </div>
                     </div>
+
                 </div>
-                
+
                 <div class="flex flex-row md:flex-col lg:flex-row flex-wrap gap-3 shrink-0 self-stretch md:self-center">
-                    <form action="/user/vps-action" method="POST" class="inline flex-1">
+                    <form action="/user/vps-action" method="POST" class="vps-power-form inline flex-1">
                         <input type="hidden" name="userVpsId" value="<%= uv._id %>">
                         <input type="hidden" name="action" value="restart">
-                        <button class="w-full px-5 py-3 md:py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-amber-500/20 whitespace-nowrap"><i class="fa-solid fa-rotate-right mr-1.5 text-amber-200"></i> Restart</button>
+                        <button type="submit" class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-amber-500/20 whitespace-nowrap"><i class="fa-solid fa-rotate-right mr-1.5 text-amber-200 vps-power-ico"></i><span class="vps-power-txt">Restart</span></button>
                     </form>
                     
-                    <form action="/user/vps-action" method="POST" class="inline flex-1">
+                    <form action="/user/vps-action" method="POST" class="vps-power-form inline flex-1">
                         <input type="hidden" name="userVpsId" value="<%= uv._id %>">
                         <% if (st === 'running') { %>
                         <input type="hidden" name="action" value="stop">
-                        <button class="w-full px-5 py-3 md:py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-rose-500/20 whitespace-nowrap"><i class="fa-solid fa-stop mr-1.5 text-rose-200"></i> Stop</button>
+                        <button type="submit" class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-rose-500 hover:bg-rose-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-rose-500/20 whitespace-nowrap"><i class="fa-solid fa-stop mr-1.5 text-rose-200 vps-power-ico"></i><span class="vps-power-txt">Stop</span></button>
                         <% } else { %>
                         <input type="hidden" name="action" value="start">
-                        <button class="w-full px-5 py-3 md:py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-emerald-500/20 whitespace-nowrap"><i class="fa-solid fa-play mr-1.5 text-emerald-200"></i> Start</button>
+                        <button type="submit" class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-emerald-500/20 whitespace-nowrap"><i class="fa-solid fa-play mr-1.5 text-emerald-200 vps-power-ico"></i><span class="vps-power-txt">Start</span></button>
                         <% } %>
                     </form>
                 </div>
@@ -164,14 +177,73 @@
 }
 </style>
 
+<div id="restartNoticeModal" class="hidden fixed inset-0 z-[80]">
+  <div class="absolute inset-0 bg-black/45" data-modal-close="1"></div>
+  <div class="relative min-h-full flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-base font-black text-gray-900"><i class="fa-solid fa-circle-info text-sky-500 mr-2"></i>Yêu cầu đã gửi</h3>
+        <button type="button" id="restartNoticeCloseX" class="text-gray-400 hover:text-gray-700"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-5 py-4 text-sm text-gray-700 leading-relaxed">
+        Vui lòng đợi admin xử lý yêu cầu khởi động lại VPS. Nếu không thấy phản hồi trong <strong>24 giờ</strong>, bạn hãy nhắn trực tiếp qua Zalo/Facebook để được hỗ trợ nhanh.
+      </div>
+      <div class="px-5 pb-5 flex flex-wrap gap-2">
+        <% if (supportSettings && supportSettings.supportZaloUrl) { %>
+          <a href="<%= supportSettings.supportZaloUrl %>" target="_blank" rel="noopener" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-black uppercase tracking-wide">Nhắn Zalo</a>
+        <% } %>
+        <% if (supportSettings && supportSettings.supportFacebookUrl) { %>
+          <a href="<%= supportSettings.supportFacebookUrl %>" target="_blank" rel="noopener" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wide">Nhắn Facebook</a>
+        <% } %>
+        <button type="button" id="restartNoticeOk" class="ml-auto px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-black uppercase tracking-wide">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.vps-power-form').forEach(function (form) {
+    form.addEventListener('submit', async function (ev) {
+      var card = form.closest('.vps-card');
+      if (!card) return;
+      var btns = card.querySelectorAll('.vps-power-form .vps-power-btn');
+      btns.forEach(function (b) { b.disabled = true; });
+      var btn = form.querySelector('.vps-power-btn');
+      if (!btn) return;
+      var txt = btn.querySelector('.vps-power-txt');
+      var ico = btn.querySelector('.vps-power-ico');
+      if (txt) txt.textContent = 'Đang gửi...';
+      if (ico) {
+        ico.className = 'fa-solid fa-spinner fa-spin mr-1.5 text-white vps-power-ico';
+      }
+
+      var actionEl = form.querySelector('input[name="action"]');
+      var action = actionEl ? String(actionEl.value || '').toLowerCase() : '';
+      if (action !== 'restart') return;
+
+      ev.preventDefault();
+      await new Promise(function (resolve) { setTimeout(resolve, 800); });
+      try {
+        await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: new URLSearchParams(new FormData(form)).toString(),
+        });
+      } catch (e) {}
+
+      var modal = document.getElementById('restartNoticeModal');
+      if (modal) modal.classList.remove('hidden');
+    });
+  });
+
   const searchEl = document.getElementById('vpsTableSearch');
+  const clearSearchEl = document.getElementById('vpsClearSearch');
   const cards = document.querySelectorAll('.vps-card');
 
-  if (searchEl) {
-    searchEl.addEventListener('input', function (e) {
-      const q = e.target.value.toLowerCase().trim();
+  function renderSearch() {
+      const q = (searchEl && searchEl.value ? searchEl.value : '').toLowerCase().trim();
+      if (clearSearchEl) clearSearchEl.classList.toggle('hidden', !q);
       cards.forEach(card => {
         const searchBlob = card.getAttribute('data-search') || '';
         if (!q || searchBlob.includes(q)) {
@@ -180,8 +252,32 @@ document.addEventListener('DOMContentLoaded', function () {
           card.style.display = 'none';
         }
       });
+  }
+
+  if (searchEl) {
+    searchEl.addEventListener('input', renderSearch);
+  }
+  if (clearSearchEl && searchEl) {
+    clearSearchEl.addEventListener('click', function () {
+      searchEl.value = '';
+      renderSearch();
+      searchEl.focus();
     });
   }
+  renderSearch();
+
+  function closeRestartModal() {
+    var modal = document.getElementById('restartNoticeModal');
+    if (modal) modal.classList.add('hidden');
+    window.location.reload();
+  }
+  var modalOk = document.getElementById('restartNoticeOk');
+  var modalX = document.getElementById('restartNoticeCloseX');
+  if (modalOk) modalOk.addEventListener('click', closeRestartModal);
+  if (modalX) modalX.addEventListener('click', closeRestartModal);
+  document.querySelectorAll('[data-modal-close="1"]').forEach(function (el) {
+    el.addEventListener('click', closeRestartModal);
+  });
 
   document.querySelectorAll('.user-vps-pw-toggle').forEach(function (btn) {
     btn.addEventListener('click', function (ev) {

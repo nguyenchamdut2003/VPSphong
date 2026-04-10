@@ -54,6 +54,7 @@ module.exports = app;
 // ===== CRON JOB: Tự động gia hạn VPS =====
 var cron = require('node-cron');
 const { tb_user_vpsModel, tb_userModel, tb_transactionModel, tb_vps_logModel, tb_vpsModel } = require('./models/vpsphong');
+const { nextTransactionOrderNumber } = require('./utils/nextTransactionOrderNumber');
 
 // Chạy job hàng ngày lúc 0h đêm
 cron.schedule('0 0 * * *', async () => {
@@ -90,6 +91,7 @@ cron.schedule('0 0 * * *', async () => {
         type: "renew",
         description: `AutoRenew: Gia hạn tự động gói ${vpsData.name} (+${addDays} ngày)`,
         status: "success",
+        orderNumber: await nextTransactionOrderNumber(),
       });
 
       await tb_vps_logModel.create({

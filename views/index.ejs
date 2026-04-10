@@ -126,6 +126,9 @@
               
               if (typeof demoVps !== 'undefined' && demoVps) {
                   d_vpsName = demoVps.vpsId ? demoVps.vpsId.name : "VPS Tùy Chọn";
+                  if (demoVps.displayName && String(demoVps.displayName).trim()) {
+                    d_vpsName = String(demoVps.displayName).trim();
+                  }
                   d_vpsCode = (demoVps.vpsId && typeof demoVps.vpsId.saleCode === 'number' && demoVps.vpsId.saleCode > 0) ? ("#vpsphong" + demoVps.vpsId.saleCode) : ("#vpsphong" + String(demoVps.vpsId ? demoVps.vpsId._id : '').slice(-6));
                   d_cfg = demoVps.vpsId ? (demoVps.vpsId.cpu + ' Core - ' + demoVps.vpsId.ram + 'GB RAM') : "Không rõ";
                   d_ip = demoVps.ip || "Đang cấp phát...";
@@ -150,7 +153,17 @@
                            <div class="w-2.5 h-2.5 rounded-full <%= d_statusColor %> <%= d_statusAnim %>"></div>
                            <h3 class="font-black text-xl text-gray-900"><%= d_vpsName %></h3>
                         </div>
-                        <p class="text-sm text-gray-500 font-medium mb-4">Mã đơn: <%= d_vpsCode %> • Cấu hình: <%= d_cfg %></p>
+                        <p class="text-sm text-gray-500 font-medium mb-4">
+                          <% if (d_real && typeof demoPurchaseOrderNumber === 'number' && demoPurchaseOrderNumber > 0) { %>
+                            Mã đơn: <span class="font-mono font-bold text-cyan-700"><%= demoPurchaseOrderNumber %></span>
+                            <span class="mx-1">•</span> Mã máy: <span class="font-mono text-gray-600"><%= d_vpsCode %></span>
+                          <% } else if (d_real) { %>
+                            Mã máy: <span class="font-mono text-gray-600"><%= d_vpsCode %></span>
+                          <% } else { %>
+                            Mã đơn (demo): <%= d_vpsCode %>
+                          <% } %>
+                          <span class="mx-1">•</span> Cấu hình: <%= d_cfg %>
+                        </p>
                         <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-2 text-[13px] bg-white p-4 rounded-xl border border-sky-100 shadow-sm">
                             <div class="font-medium text-gray-600 flex items-center">
                                 <span class="w-10 text-gray-400">IP:</span> 

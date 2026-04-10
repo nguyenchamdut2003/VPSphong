@@ -10,6 +10,7 @@ const {
   reserveVoucherUse,
   releaseVoucherUse,
 } = require("../utils/voucher");
+const { nextTransactionOrderNumber } = require("../utils/nextTransactionOrderNumber");
 
 module.exports.getDashboard = async (req, res) => {
   res.render("user/dashboard", { user: res.locals.user });
@@ -150,6 +151,7 @@ module.exports.postDeposit = async (req, res) => {
       type: "deposit",
       description: `Nạp tiền vào tài khoản: ${amount}`,
       status: "success",
+      orderNumber: await nextTransactionOrderNumber(),
     });
 
     res.redirect("/user/chuyen-khoan");
@@ -256,6 +258,7 @@ module.exports.postBuyVps = async (req, res) => {
       voucherId: appliedVoucher ? appliedVoucher._id : undefined,
       originalAmount: appliedVoucher ? originalPrice : undefined,
       discountAmount: appliedVoucher ? discountAmount : 0,
+      orderNumber: await nextTransactionOrderNumber(),
     });
 
     await tb_vps_logModel.create({
@@ -360,6 +363,7 @@ module.exports.postRenew = async (req, res) => {
       type: "renew",
       description: `Gia hạn VPS: ${vpsData.name} - Thêm ${addDays} ngày`,
       status: "success",
+      orderNumber: await nextTransactionOrderNumber(),
     });
 
     await tb_vps_logModel.create({
@@ -377,29 +381,44 @@ module.exports.postRenew = async (req, res) => {
   }
 }
 
-// Các thao tác VPS (Stop, start, ...)
+// Các thao tác VPS (Stop, start, restart — bật/tắt/khởi động lại do admin xử lý tay)
 module.exports.postVpsAction = async (req, res) => {
   try {
-    const { userVpsId, action } = req.body; // action = start/stop
+    const { userVpsId, action } = req.body;
     const uv = await tb_user_vpsModel.findOne({ _id: userVpsId, userId: res.locals.user._id });
     if (!uv) return res.send("VPS không tồn tại");
 
+    if (uv.status === "expired" || uv.status === "suspended") {
+      return res.send("VPS hết hạn hoặc bị khóa — không thể thao tác nguồn. Vui lòng gia hạn hoặc liên hệ admin.");
+    }
+
     if (action === "start") uv.status = "running";
-    if (action === "stop") uv.status = "stopped";
+    else if (action === "stop") uv.status = "stopped";
+    else if (action === "restart") {
+      /* Giữ trạng thái hiển thị; admin làm thật trên máy chủ */
+    } else {
+      return res.send("Thao tác không hợp lệ");
+    }
 
     await uv.save();
 
+    const actionLabel =
+      action === "start" ? "start" : action === "stop" ? "stop" : action === "restart" ? "restart" : action;
     await tb_vps_logModel.create({
       userId: res.locals.user._id,
       ownerUserId: res.locals.user._id,
       userVpsId: uv._id,
-      action,
+      action: actionLabel,
       category: "control",
-      description: `Thực hiện thao tác: ${action}`,
+      description:
+        action === "restart"
+          ? "Yêu cầu khởi động lại VPS (admin xử lý thủ công khi online)"
+          : `Thực hiện thao tác: ${actionLabel}`,
     });
 
-    res.redirect('/user/vps');
+    res.redirect("/user/vps");
   } catch (err) {
     res.send("Lỗi");
   }
 };
+

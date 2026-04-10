@@ -67,9 +67,9 @@
             <% categories.forEach(c => { %>
               <div class="inline-flex items-center gap-2 pl-4 pr-2 py-2 rounded-xl bg-gray-100 border border-gray-200">
                 <span class="font-bold text-gray-800"><%= c.name %></span>
-                <form action="/admin/vps/category/delete" method="POST" class="inline" onsubmit="return confirm('Xóa loại này? Chỉ xóa được khi chưa gán cho VPS nào.');">
+                <form action="/admin/vps/category/delete" method="POST" class="inline" onsubmit="return confirm('Ẩn loại này khỏi danh sách? (Không xóa khỏi server)');">
                   <input type="hidden" name="categoryId" value="<%= c._id %>">
-                  <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                  <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="Ẩn"><i class="fa-solid fa-eye-slash"></i></button>
                 </form>
               </div>
             <% }) %>
@@ -108,15 +108,15 @@
 
           <div class="md:col-span-2">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPU (core)</label>
-            <input type="number" name="cpu" min="1" max="256" value="2" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+            <input type="number" name="cpu" min="1" max="256" value="1" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
           </div>
           <div class="md:col-span-2">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">RAM (GB)</label>
-            <input type="number" name="ram" min="1" max="1024" value="4" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+            <input type="number" name="ram" min="1" max="1024" value="1" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
           </div>
           <div class="md:col-span-2">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">SSD (GB)</label>
-            <input type="number" name="disk" min="10" max="10000" value="40" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+            <input type="number" name="disk" min="1" max="10000" value="1000" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
           </div>
           <div class="md:col-span-2">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Băng thông (GB)</label>
@@ -263,16 +263,17 @@
                   <% } %>
                 </td>
                 <td class="px-4 py-4">
-                  <% if (!vps.isSold) { %>
-                    <form action="/admin/vps/toggle" method="POST">
-                      <input type="hidden" name="vpsId" value="<%= vps._id %>">
-                      <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold border <%= vps.status ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' %>">
-                        <%= vps.status ? 'Ngừng bán' : 'Mở bán' %>
-                      </button>
-                    </form>
-                  <% } else { %>
-                    <span class="text-gray-400 text-xs">—</span>
-                  <% } %>
+                  <div class="flex flex-wrap gap-2">
+                    <a href="/admin/vps/<%= vps._id %>/edit" class="px-3 py-2 rounded-lg text-xs font-bold border border-blue-200 text-blue-700 hover:bg-blue-50">Sửa</a>
+                    <% if (!vps.isSold) { %>
+                      <form action="/admin/vps/toggle" method="POST">
+                        <input type="hidden" name="vpsId" value="<%= vps._id %>">
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold border <%= vps.status ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' %>">
+                          <%= vps.status ? 'Ngừng bán' : 'Mở bán' %>
+                        </button>
+                      </form>
+                    <% } %>
+                  </div>
                 </td>
               </tr>
             <% }) %>

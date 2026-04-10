@@ -11,10 +11,13 @@ router.post('/vps/category/add', adminController.postAddCategory);
 router.post('/vps/category/delete', adminController.postDeleteCategory);
 router.post('/vps/add', adminController.postAddVps);
 router.post('/vps/toggle', adminController.postToggleVps);
+router.get('/vps/:id/edit', adminController.getEditVps);
+router.post('/vps/:id/update', adminController.postUpdateVps);
 
 router.get('/users', adminController.getUsersManager);
 router.post('/users/toggle-lock', adminController.postToggleUserLock);
 router.get('/users/:id', adminController.getUserDetail);
+router.post('/users/:id/vps-rename', adminController.postRenameUserVps);
 
 router.get('/logs', adminController.getAllLogs);
 

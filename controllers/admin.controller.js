@@ -20,6 +20,10 @@ async function listVpsForAdminView() {
   }));
 }
 
+async function listActiveCategories() {
+  return tb_vps_categoryModel.find({ isHidden: { $ne: true } }).sort({ name: 1 });
+}
+
 module.exports.getDashboard = async (req, res) => {
   const totalUsers = await tb_userModel.countDocuments({ role: "customer" });
   const totalVpsSold = await tb_user_vpsModel.countDocuments();
@@ -27,7 +31,7 @@ module.exports.getDashboard = async (req, res) => {
 };
 
 module.exports.getVpsManager = async (req, res) => {
-  const categories = await tb_vps_categoryModel.find().sort({ name: 1 });
+  const categories = await listActiveCategories();
   const vpsList = await listVpsForAdminView();
   let settings = await tb_site_settingsModel.findOne();
   if(!settings) settings = await tb_site_settingsModel.create({});
@@ -38,21 +42,31 @@ module.exports.getVpsManager = async (req, res) => {
 module.exports.postAddCategory = async (req, res) => {
   const name = (req.body.name || "").trim();
   if (!name) return res.redirect("/admin/vps");
-  const dup = await tb_vps_categoryModel.findOne({ name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
-  if (!dup) await tb_vps_categoryModel.create({ name });
+  const dup = await tb_vps_categoryModel.findOne({
+    name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+  });
+  if (!dup) {
+    await tb_vps_categoryModel.create({ name });
+  } else if (dup.isHidden) {
+    dup.isHidden = false;
+    dup.isActive = true;
+    await dup.save();
+  }
   res.redirect("/admin/vps");
 };
 
 module.exports.postDeleteCategory = async (req, res) => {
   const { categoryId } = req.body;
   const used = await tb_vpsModel.countDocuments({ categoryId });
-  if (used === 0) await tb_vps_categoryModel.findByIdAndDelete(categoryId);
+  if (used === 0) {
+    await tb_vps_categoryModel.findByIdAndUpdate(categoryId, { $set: { isHidden: true, isActive: false } });
+  }
   res.redirect("/admin/vps");
 };
 
 module.exports.postAddVps = async (req, res) => {
   const renderError = async (status, message) => {
-    const categories = await tb_vps_categoryModel.find().sort({ name: 1 });
+    const categories = await listActiveCategories();
     const vpsList = await listVpsForAdminView();
     let settings = await tb_site_settingsModel.findOne();
     if(!settings) settings = await tb_site_settingsModel.create({});
@@ -122,6 +136,7 @@ module.exports.postAddVps = async (req, res) => {
     if (!catId) return renderError(400, "Chọn loại VPS.");
 
     const cat = await tb_vps_categoryModel.findById(catId);
+    if (!cat || cat.isHidden) return renderError(400, "Loại VPS không hợp lệ.");
     const resolvedName = cat && cat.name ? String(cat.name).trim() : "VPS";
 
     const kindRaw = String(productKind || "blank").toLowerCase();
@@ -140,7 +155,7 @@ module.exports.postAddVps = async (req, res) => {
       features: featuresArray,
       cpu: Number(cpu) || 1,
       ram: Number(ram) || 1,
-      disk: Number(disk) || 20,
+      disk: Number(disk) || 1000,
       bandwidth: bandwidth ? Number(bandwidth) : undefined,
       price: Number(price) || 0,
       billingCycleDays: Math.max(1, Number(billingCycleDays) || 30),
@@ -157,7 +172,7 @@ module.exports.postAddVps = async (req, res) => {
     res.redirect("/admin/vps");
   } catch (e) {
     console.error(e);
-    const categories = await tb_vps_categoryModel.find().sort({ name: 1 });
+    const categories = await listActiveCategories();
     const vpsList = await listVpsForAdminView();
     let settings = await tb_site_settingsModel.findOne();
     if(!settings) settings = await tb_site_settingsModel.create({});
@@ -180,6 +195,122 @@ module.exports.postToggleVps = async (req, res) => {
     await vps.save();
   }
   res.redirect("/admin/vps");
+};
+
+module.exports.getEditVps = async (req, res) => {
+  try {
+    const vpsId = req.params.id;
+    const vps = await tb_vpsModel.findById(vpsId).lean();
+    if (!vps) return res.redirect("/admin/vps");
+    const categories = await listActiveCategories();
+    let settings = await tb_site_settingsModel.findOne();
+    if (!settings) settings = await tb_site_settingsModel.create({});
+    const availableFeatures = settings.availableFeatures || [];
+    res.render("admin/vps_edit", { admin: res.locals.user, vps, categories, availableFeatures, error: null });
+  } catch (e) {
+    console.error(e);
+    res.redirect("/admin/vps");
+  }
+};
+
+module.exports.postUpdateVps = async (req, res) => {
+  const vpsId = req.params.id;
+  const renderError = async (status, message) => {
+    const vps = await tb_vpsModel.findById(vpsId).lean();
+    if (!vps) return res.redirect("/admin/vps");
+    const categories = await listActiveCategories();
+    let settings = await tb_site_settingsModel.findOne();
+    if (!settings) settings = await tb_site_settingsModel.create({});
+    const availableFeatures = settings.availableFeatures || [];
+    return res.status(status).render("admin/vps_edit", {
+      admin: res.locals.user,
+      vps,
+      categories,
+      availableFeatures,
+      error: message,
+    });
+  };
+
+  try {
+    const vps = await tb_vpsModel.findById(vpsId);
+    if (!vps) return res.redirect("/admin/vps");
+
+    const {
+      categoryId,
+      cpu,
+      ram,
+      disk,
+      bandwidth,
+      price,
+      billingCycleDays,
+      serverIp,
+      serverUsername,
+      serverPassword,
+      durationKind,
+      initialRentDays,
+      rentValidUntil,
+      description,
+      productKind,
+      ipLocation,
+      features,
+      newFeature,
+    } = req.body;
+
+    let featuresArray = [];
+    if (typeof features === "string") featuresArray = [features];
+    else if (Array.isArray(features)) featuresArray = features.map((f) => String(f).trim()).filter(Boolean);
+
+    if (newFeature && typeof newFeature === "string" && newFeature.trim()) {
+      const nf = newFeature.trim();
+      if (!featuresArray.includes(nf)) featuresArray.push(nf);
+      await tb_site_settingsModel.findOneAndUpdate({}, { $addToSet: { availableFeatures: nf } }, { upsert: true });
+    }
+
+    const catId = categoryId && String(categoryId).length === 24 ? categoryId : null;
+    if (!catId) return renderError(400, "Chọn loại VPS.");
+    const cat = await tb_vps_categoryModel.findById(catId);
+    if (!cat || cat.isHidden) return renderError(400, "Loại VPS không hợp lệ.");
+
+    const ip = String(serverIp || "").trim();
+    if (!ip) return renderError(400, "Vui lòng nhập địa chỉ IP máy chủ.");
+
+    const kindRaw = String(productKind || "blank").toLowerCase();
+    const resolvedKind = ["game", "blank", "datacenter"].includes(kindRaw) ? kindRaw : "blank";
+
+    const durKind = durationKind === "until_date" ? "until_date" : "days";
+    let until = null;
+    if (durKind === "until_date") {
+      until = rentValidUntil ? new Date(rentValidUntil) : null;
+      if (!until || Number.isNaN(until.getTime())) return renderError(400, "Ngày hết hạn không hợp lệ.");
+    }
+
+    vps.categoryId = catId;
+    vps.name = String(cat.name || "VPS").trim() || "VPS";
+    vps.productKind = resolvedKind;
+    vps.description = String(description || "").trim();
+    vps.ipLocation = String(ipLocation || "Singapore").trim() || "Singapore";
+    vps.features = featuresArray;
+    vps.cpu = Math.max(1, Number(cpu) || 1);
+    vps.ram = Math.max(1, Number(ram) || 1);
+    vps.disk = Math.max(1, Number(disk) || 1000);
+    vps.bandwidth = String(bandwidth || "").trim() === "" ? undefined : Number(bandwidth) || 0;
+    vps.price = Math.max(0, Number(price) || 0);
+    vps.billingCycleDays = Math.max(1, Number(billingCycleDays) || 30);
+    vps.serverIp = ip;
+    vps.serverUsername = String(serverUsername || "root").trim() || "root";
+    if (String(serverPassword || "").trim()) {
+      vps.passwordEnc = encrypt(String(serverPassword).trim());
+    }
+    vps.durationKind = durKind;
+    vps.initialRentDays = Math.max(1, Number(initialRentDays) || 30);
+    vps.rentValidUntil = durKind === "until_date" ? until : undefined;
+
+    await vps.save();
+    res.redirect("/admin/vps");
+  } catch (e) {
+    console.error(e);
+    return renderError(500, "Lỗi cập nhật VPS, thử lại.");
+  }
 };
 
 module.exports.getUsersManager = async (req, res) => {
@@ -210,6 +341,37 @@ module.exports.getUserDetail = async (req, res) => {
     .sort({ createdAt: -1 });
 
   res.render("admin/user_detail", { admin: res.locals.user, targetUser, userVpsList, userLogs });
+};
+
+module.exports.postRenameUserVps = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const userVpsId = String(req.body.userVpsId || "");
+    const displayName = String(req.body.displayName || "").trim();
+    if (displayName.length > 80) {
+      return res.redirect(`/admin/users/${userId}`);
+    }
+
+    const uv = await tb_user_vpsModel.findOne({ _id: userVpsId, userId });
+    if (!uv) return res.redirect(`/admin/users/${userId}`);
+
+    uv.displayName = displayName;
+    await uv.save();
+
+    await tb_vps_logModel.create({
+      userId: res.locals.user._id,
+      ownerUserId: userId,
+      userVpsId: uv._id,
+      action: "rename",
+      category: "admin",
+      description: displayName
+        ? `Admin đổi tên hiển thị VPS: ${displayName}`
+        : "Admin xóa tên hiển thị tùy chỉnh của VPS",
+    });
+  } catch (e) {
+    console.error(e);
+  }
+  return res.redirect(`/admin/users/${req.params.id}`);
 };
 
 module.exports.getAllLogs = async (req, res) => {
@@ -249,7 +411,7 @@ module.exports.postSupportSettings = async (req, res) => {
 
 module.exports.getVouchers = async (req, res) => {
   try {
-    const vouchers = await tb_voucherModel.find().sort({ createdAt: -1 }).lean();
+    const vouchers = await tb_voucherModel.find({ isHidden: { $ne: true } }).sort({ createdAt: -1 }).lean();
     res.render("admin/vouchers", {
       admin: res.locals.user,
       vouchers,
@@ -293,17 +455,30 @@ module.exports.postAddVoucher = async (req, res) => {
     const minOrderAmount = Math.max(0, Number(req.body.minOrderAmount) || 0);
     const note = String(req.body.note || "").trim().slice(0, 500);
 
-    await tb_voucherModel.create({
-      code,
-      discountType,
-      discountValue,
-      maxUses,
-      expiresAt,
-      minOrderAmount,
-      note,
-      isActive: true,
-      usedCount: 0,
-    });
+    const existed = await tb_voucherModel.findOne({ code });
+    if (existed) {
+      existed.discountType = discountType;
+      existed.discountValue = discountValue;
+      existed.maxUses = maxUses;
+      existed.expiresAt = expiresAt;
+      existed.minOrderAmount = minOrderAmount;
+      existed.note = note;
+      existed.isActive = true;
+      existed.isHidden = false;
+      await existed.save();
+    } else {
+      await tb_voucherModel.create({
+        code,
+        discountType,
+        discountValue,
+        maxUses,
+        expiresAt,
+        minOrderAmount,
+        note,
+        isActive: true,
+        usedCount: 0,
+      });
+    }
     res.redirect("/admin/vouchers?ok=1");
   } catch (e) {
     console.error(e);
@@ -331,7 +506,7 @@ module.exports.postToggleVoucher = async (req, res) => {
 module.exports.postDeleteVoucher = async (req, res) => {
   try {
     const { voucherId } = req.body;
-    await tb_voucherModel.findByIdAndDelete(voucherId);
+    await tb_voucherModel.findByIdAndUpdate(voucherId, { $set: { isHidden: true, isActive: false } });
     res.redirect("/admin/vouchers");
   } catch (e) {
     res.redirect("/admin/vouchers");

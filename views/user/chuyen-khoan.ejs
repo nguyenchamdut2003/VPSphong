@@ -125,7 +125,8 @@
           <% deposits.forEach((tx, idx) => {
                const hx = String(tx._id || '').replace(/[^a-f0-9]/gi, '');
                const tail = hx.slice(-8);
-               const mcode = tail ? ((parseInt(tail, 16) % 9000) + 1000) : '—';
+               const legacyMcode = tail ? ((parseInt(tail, 16) % 9000) + 1000) : '—';
+               const mcode = (typeof tx.orderNumber === 'number' && tx.orderNumber > 0) ? tx.orderNumber : legacyMcode;
                const tStr = new Date(tx.createdAt).toLocaleString('vi-VN');
                const blob = (String(mcode) + ' ' + tx.amount + ' ' + (tx.description || '')).toLowerCase();
                const st = tx.status || '';
