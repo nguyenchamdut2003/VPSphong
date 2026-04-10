@@ -18,6 +18,9 @@
       <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30">
         <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
       </a>
+      <a href="/admin/fix-requests" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-screwdriver-wrench w-5"></i> Đơn fix lỗi
+      </a>
       <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
         <i class="fa-solid fa-ticket w-5"></i> Voucher
       </a>
@@ -94,7 +97,7 @@
           </div>
           <div class="md:col-span-6">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Giá (VNĐ) <span class="text-red-500">*</span></label>
-            <input type="number" name="price" min="0" step="1000" class="w-full bg-blue-50 border border-blue-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-800" required>
+            <input type="number" name="price" min="0" step="1000" value="30000" class="w-full bg-blue-50 border border-blue-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-800" required>
           </div>
 
           <div class="md:col-span-12">
@@ -116,11 +119,12 @@
           </div>
           <div class="md:col-span-2">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">SSD (GB)</label>
-            <input type="number" name="disk" min="1" max="10000" value="1000" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
+            <input type="number" name="disk" min="1" max="10000" value="25" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold" required>
           </div>
           <div class="md:col-span-2">
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Băng thông (GB)</label>
-            <input type="number" name="bandwidth" min="0" step="1" placeholder="Tuỳ chọn" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Băng thông</label>
+            <input type="text" value="Không giới hạn" readonly class="w-full bg-gray-100 border border-gray-200 p-3 rounded-xl outline-none font-semibold text-gray-700">
+            <input type="hidden" name="bandwidth" value="0">
           </div>
           <div class="md:col-span-4">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Chu kỳ gia hạn (ngày)</label>
@@ -133,7 +137,7 @@
           </div>
           <div class="md:col-span-4">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">User SSH</label>
-            <input type="text" name="serverUsername" value="root" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono">
+            <input type="text" name="serverUsername" value="Administrator" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono">
           </div>
           <div class="md:col-span-4">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu <span class="text-red-500">*</span></label>
@@ -189,7 +193,7 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-               <input type="text" name="newFeature" class="flex-1 bg-white border border-gray-200 p-2 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nhập Hệ điều hành hoặc Tính năng mới...">
+               <input type="text" name="newFeature" class="flex-1 bg-white border border-gray-200 p-2 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Mặc định nên có: Win 12R2, Bảo hành lỗi 1 đổi 1">
                <span class="text-[11px] text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i> Sẽ gán vào gói này và lưu cho lần sau.</span>
             </div>
           </div>
@@ -233,7 +237,7 @@
                 <td class="px-4 py-4 text-gray-700 font-semibold text-xs"><%= pkLabel %></td>
                 <td class="px-4 py-4 font-mono font-extrabold text-blue-800"><%= vpsCode %></td>
                 <td class="px-4 py-4 font-mono text-blue-700"><%= vps.serverIp || '—' %></td>
-                <td class="px-4 py-4 font-mono text-gray-600"><%= vps.cpu %>C / <%= vps.ram %>G / <%= vps.disk %>G</td>
+                <td class="px-4 py-4 font-mono text-gray-600"><%= vps.cpu %>C / <%= vps.ram %>G / <%= vps.disk %>G <% if (vps.bandwidth === 0 || vps.bandwidth == null) { %>/ Unlimited BW<% } %></td>
                 <td class="px-4 py-4 font-extrabold text-blue-600"><%= (vps.price != null ? vps.price : 0).toLocaleString() %> đ</td>
                 <td class="px-4 py-4 text-gray-600">
                   <% if (vps.durationKind === 'until_date' && vps.rentValidUntil) { %>

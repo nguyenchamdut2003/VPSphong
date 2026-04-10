@@ -134,6 +134,18 @@ const tb_user_vps = new mongoose.Schema(
       enum: ["running", "stopped", "expired", "suspended"],
       default: "running",
     },
+    /** Yêu cầu thao tác nguồn chờ admin xử lý */
+    pendingPowerAction: {
+      type: String,
+      enum: ["none", "start", "stop", "restart"],
+      default: "none",
+    },
+    powerActionStatus: {
+      type: String,
+      enum: ["idle", "pending"],
+      default: "idle",
+    },
+    powerActionRequestedAt: { type: Date },
 
     autoRenew: { type: Boolean, default: false },
     /** Đồng bộ với gói lúc mua; dùng cho gia hạn tay & cron */
@@ -148,6 +160,7 @@ const tb_user_vps = new mongoose.Schema(
 );
 tb_user_vps.index({ userId: 1 });
 tb_user_vps.index({ expireDate: 1, autoRenew: 1 });
+tb_user_vps.index({ powerActionStatus: 1, powerActionRequestedAt: -1 });
 
 /**
  * userId: người thực hiện (khách hoặc admin).

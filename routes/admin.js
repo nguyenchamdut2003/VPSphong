@@ -13,6 +13,8 @@ router.post('/vps/add', adminController.postAddVps);
 router.post('/vps/toggle', adminController.postToggleVps);
 router.get('/vps/:id/edit', adminController.getEditVps);
 router.post('/vps/:id/update', adminController.postUpdateVps);
+router.get('/fix-requests', adminController.getFixRequests);
+router.post('/fix-requests/:id/resolve', adminController.postResolveFixRequest);
 
 router.get('/users', adminController.getUsersManager);
 router.post('/users/toggle-lock', adminController.postToggleUserLock);

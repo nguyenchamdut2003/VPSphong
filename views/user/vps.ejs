@@ -47,6 +47,8 @@
     <div class="space-y-6">
         <% userVpsList.forEach((uv, idx) => {
             const st = uv.status;
+            const pendingAction = uv.pendingPowerAction || 'none';
+            const hasPendingPowerAction = pendingAction !== 'none' || uv.powerActionStatus === 'pending';
             const vid = uv.vpsId;
             const cycleDays = uv.renewalPeriodDays || (vid && vid.billingCycleDays) || 30;
             const durationLabel = (cycleDays >= 28 && cycleDays <= 31) ? '1 Tháng' : (cycleDays + ' ngày');
@@ -81,6 +83,13 @@
                 statusDot = 'bg-rose-500';
                 statusText = 'Hết hạn';
             }
+            const pendingText = pendingAction === 'restart'
+                ? 'Đang chờ admin duyệt Restart'
+                : pendingAction === 'stop'
+                    ? 'Đang chờ admin duyệt Stop'
+                    : pendingAction === 'start'
+                        ? 'Đang chờ admin duyệt Start'
+                        : '';
         %>
         <div class="vps-card bg-white rounded-[2rem] shadow-xl shadow-sky-900/5 p-8 border border-sky-100 relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-sky-300" data-search="<%= searchBlob %>">
             <div class="absolute top-0 right-0 p-8 text-sky-50 pointer-events-none"><i class="fa-solid fa-server text-8xl"></i></div>
@@ -92,6 +101,12 @@
                            <div class="w-2.5 h-2.5 rounded-full <%= statusDot %> <%= statusAnim %>"></div>
                            <%= statusText %>
                         </div>
+                        <% if (hasPendingPowerAction) { %>
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 shadow-sm text-[10px] font-black uppercase tracking-wider text-amber-700">
+                           <i class="fa-solid fa-hourglass-half"></i>
+                           <%= pendingText %>
+                        </div>
+                        <% } %>
                         <h3 class="font-black text-xl md:text-2xl text-gray-900 tracking-tight"><%= titleName %> <span class="text-sky-600 text-lg ml-1"><%= vpsCode %></span></h3>
                     </div>
                     <% if (titleName !== vpsName) { %>
@@ -133,17 +148,17 @@
                     <form action="/user/vps-action" method="POST" class="vps-power-form inline flex-1">
                         <input type="hidden" name="userVpsId" value="<%= uv._id %>">
                         <input type="hidden" name="action" value="restart">
-                        <button type="submit" class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-amber-500/20 whitespace-nowrap"><i class="fa-solid fa-rotate-right mr-1.5 text-amber-200 vps-power-ico"></i><span class="vps-power-txt">Restart</span></button>
+                        <button type="submit" <%= hasPendingPowerAction ? 'disabled' : '' %> class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-amber-500/20 whitespace-nowrap"><i class="fa-solid <%= hasPendingPowerAction ? 'fa-spinner fa-spin' : 'fa-rotate-right' %> mr-1.5 text-amber-200 vps-power-ico"></i><span class="vps-power-txt"><%= hasPendingPowerAction ? 'Chờ duyệt' : 'Restart' %></span></button>
                     </form>
                     
                     <form action="/user/vps-action" method="POST" class="vps-power-form inline flex-1">
                         <input type="hidden" name="userVpsId" value="<%= uv._id %>">
                         <% if (st === 'running') { %>
                         <input type="hidden" name="action" value="stop">
-                        <button type="submit" class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-rose-500 hover:bg-rose-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-rose-500/20 whitespace-nowrap"><i class="fa-solid fa-stop mr-1.5 text-rose-200 vps-power-ico"></i><span class="vps-power-txt">Stop</span></button>
+                        <button type="submit" <%= hasPendingPowerAction ? 'disabled' : '' %> class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-rose-500 hover:bg-rose-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-rose-500/20 whitespace-nowrap"><i class="fa-solid <%= hasPendingPowerAction && pendingAction === 'stop' ? 'fa-spinner fa-spin' : 'fa-stop' %> mr-1.5 text-rose-200 vps-power-ico"></i><span class="vps-power-txt"><%= hasPendingPowerAction && pendingAction === 'stop' ? 'Chờ duyệt' : 'Stop' %></span></button>
                         <% } else { %>
                         <input type="hidden" name="action" value="start">
-                        <button type="submit" class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-emerald-500/20 whitespace-nowrap"><i class="fa-solid fa-play mr-1.5 text-emerald-200 vps-power-ico"></i><span class="vps-power-txt">Start</span></button>
+                        <button type="submit" <%= hasPendingPowerAction ? 'disabled' : '' %> class="vps-power-btn w-full px-5 py-3 md:py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-70 disabled:pointer-events-none text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-emerald-500/20 whitespace-nowrap"><i class="fa-solid <%= hasPendingPowerAction && pendingAction === 'start' ? 'fa-spinner fa-spin' : 'fa-play' %> mr-1.5 text-emerald-200 vps-power-ico"></i><span class="vps-power-txt"><%= hasPendingPowerAction && pendingAction === 'start' ? 'Chờ duyệt' : 'Start' %></span></button>
                         <% } %>
                     </form>
                 </div>
@@ -204,7 +219,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.vps-power-form').forEach(function (form) {
-    form.addEventListener('submit', async function (ev) {
+    form.addEventListener('submit', function () {
       var card = form.closest('.vps-card');
       if (!card) return;
       var btns = card.querySelectorAll('.vps-power-form .vps-power-btn');
@@ -217,23 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (ico) {
         ico.className = 'fa-solid fa-spinner fa-spin mr-1.5 text-white vps-power-ico';
       }
-
-      var actionEl = form.querySelector('input[name="action"]');
-      var action = actionEl ? String(actionEl.value || '').toLowerCase() : '';
-      if (action !== 'restart') return;
-
-      ev.preventDefault();
-      await new Promise(function (resolve) { setTimeout(resolve, 800); });
-      try {
-        await fetch(form.action, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-          body: new URLSearchParams(new FormData(form)).toString(),
-        });
-      } catch (e) {}
-
-      var modal = document.getElementById('restartNoticeModal');
-      if (modal) modal.classList.remove('hidden');
     });
   });
 
@@ -265,19 +263,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
   renderSearch();
-
-  function closeRestartModal() {
-    var modal = document.getElementById('restartNoticeModal');
-    if (modal) modal.classList.add('hidden');
-    window.location.reload();
-  }
-  var modalOk = document.getElementById('restartNoticeOk');
-  var modalX = document.getElementById('restartNoticeCloseX');
-  if (modalOk) modalOk.addEventListener('click', closeRestartModal);
-  if (modalX) modalX.addEventListener('click', closeRestartModal);
-  document.querySelectorAll('[data-modal-close="1"]').forEach(function (el) {
-    el.addEventListener('click', closeRestartModal);
-  });
 
   document.querySelectorAll('.user-vps-pw-toggle').forEach(function (btn) {
     btn.addEventListener('click', function (ev) {

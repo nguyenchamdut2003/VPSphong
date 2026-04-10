@@ -14,7 +14,17 @@ const { encrypt, decrypt } = require("../utils/vpsCrypto");
 
 async function listVpsForAdminView() {
   const raw = await tb_vpsModel.find().populate("categoryId").sort({ createdAt: -1 }).lean();
-  return raw.map((v) => ({
+  const sorted = raw.sort((a, b) => {
+    const rank = (x) => {
+      if (!x.isSold && x.status) return 0; // dang ban
+      if (!x.isSold && !x.status) return 1; // ngung ban
+      return 2; // da ban
+    };
+    const d = rank(a) - rank(b);
+    if (d !== 0) return d;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+  return sorted.map((v) => ({
     ...v,
     plainPassword: v.passwordEnc ? decrypt(v.passwordEnc) : "",
   }));
@@ -26,8 +36,37 @@ async function listActiveCategories() {
 
 module.exports.getDashboard = async (req, res) => {
   const totalUsers = await tb_userModel.countDocuments({ role: "customer" });
-  const totalVpsSold = await tb_user_vpsModel.countDocuments();
-  res.render("admin/dashboard", { admin: res.locals.user, totalUsers, totalVpsSold });
+  const totalVpsSold = await tb_vpsModel.countDocuments({ isSold: true });
+  const totalVpsAvailable = await tb_vpsModel.countDocuments({ isSold: { $ne: true }, status: true });
+  const totalVpsRunning = await tb_user_vpsModel.countDocuments({ status: "running" });
+  const totalFixResolved = await tb_vps_logModel.countDocuments({
+    action: { $in: ["start_approved", "stop_approved", "restart_approved"] },
+  });
+
+  const [customerBalanceAgg, usedAgg] = await Promise.all([
+    tb_userModel.aggregate([
+      { $match: { role: "customer" } },
+      { $group: { _id: null, total: { $sum: "$balance" } } },
+    ]),
+    tb_transactionModel.aggregate([
+      { $match: { status: "success", type: { $in: ["payment", "renew"] } } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]),
+  ]);
+
+  const totalCustomerBalance = customerBalanceAgg[0]?.total || 0;
+  const totalCustomerUsed = usedAgg[0]?.total || 0;
+
+  res.render("admin/dashboard", {
+    admin: res.locals.user,
+    totalUsers,
+    totalVpsSold,
+    totalVpsAvailable,
+    totalVpsRunning,
+    totalFixResolved,
+    totalCustomerBalance,
+    totalCustomerUsed,
+  });
 };
 
 module.exports.getVpsManager = async (req, res) => {
@@ -116,6 +155,10 @@ module.exports.postAddVps = async (req, res) => {
       }
       await tb_site_settingsModel.findOneAndUpdate({}, { $addToSet: { availableFeatures: nf } }, { upsert: true });
     }
+    const defaultFeatures = ["Win 12R2", "Bảo hành lỗi 1 đổi 1"];
+    for (const ft of defaultFeatures) {
+      if (!featuresArray.includes(ft)) featuresArray.push(ft);
+    }
 
     const pwd = (serverPassword || "").trim();
     if (!pwd) return renderError(400, "Vui lòng nhập mật khẩu máy chủ.");
@@ -155,12 +198,12 @@ module.exports.postAddVps = async (req, res) => {
       features: featuresArray,
       cpu: Number(cpu) || 1,
       ram: Number(ram) || 1,
-      disk: Number(disk) || 1000,
-      bandwidth: bandwidth ? Number(bandwidth) : undefined,
-      price: Number(price) || 0,
+      disk: Number(disk) || 25,
+      bandwidth: String(bandwidth || "").trim() === "" ? 0 : Number(bandwidth) || 0,
+      price: Number(price) || 30000,
       billingCycleDays: Math.max(1, Number(billingCycleDays) || 30),
       serverIp: ip,
-      serverUsername: (serverUsername || "root").trim() || "root",
+      serverUsername: (serverUsername || "Administrator").trim() || "Administrator",
       passwordEnc: encrypt(pwd),
       durationKind: kind,
       initialRentDays: Math.max(1, Number(initialRentDays) || 30),
@@ -311,6 +354,52 @@ module.exports.postUpdateVps = async (req, res) => {
     console.error(e);
     return renderError(500, "Lỗi cập nhật VPS, thử lại.");
   }
+};
+
+module.exports.getFixRequests = async (req, res) => {
+  try {
+    const list = await tb_user_vpsModel
+      .find({ powerActionStatus: "pending", pendingPowerAction: { $ne: "none" } })
+      .populate("userId", "username email phone")
+      .populate("vpsId", "name saleCode serverIp")
+      .sort({ powerActionRequestedAt: -1, createdAt: -1 })
+      .lean();
+    res.render("admin/fix_requests", { admin: res.locals.user, list });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Lỗi tải danh sách fix lỗi");
+  }
+};
+
+module.exports.postResolveFixRequest = async (req, res) => {
+  try {
+    const userVpsId = String(req.params.id || "");
+    const uv = await tb_user_vpsModel.findById(userVpsId);
+    if (!uv || uv.powerActionStatus !== "pending" || uv.pendingPowerAction === "none") {
+      return res.redirect("/admin/fix-requests");
+    }
+
+    const action = uv.pendingPowerAction;
+    if (action === "stop") uv.status = "stopped";
+    else if (action === "start" || action === "restart") uv.status = "running";
+
+    uv.pendingPowerAction = "none";
+    uv.powerActionStatus = "idle";
+    uv.powerActionRequestedAt = undefined;
+    await uv.save();
+
+    await tb_vps_logModel.create({
+      userId: res.locals.user._id,
+      ownerUserId: uv.userId,
+      userVpsId: uv._id,
+      action: `${action}_approved`,
+      category: "admin",
+      description: `Admin đã xử lý yêu cầu ${action} VPS`,
+    });
+  } catch (e) {
+    console.error(e);
+  }
+  return res.redirect("/admin/fix-requests");
 };
 
 module.exports.getUsersManager = async (req, res) => {

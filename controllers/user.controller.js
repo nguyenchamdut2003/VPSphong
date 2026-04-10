@@ -285,7 +285,8 @@ module.exports.getMyVps = async (req, res) => {
   try {
     const userVpsList = await tb_user_vpsModel
       .find({ userId: res.locals.user._id })
-      .populate({ path: "vpsId", populate: { path: "categoryId", select: "name" } });
+      .populate({ path: "vpsId", populate: { path: "categoryId", select: "name" } })
+      .sort({ powerActionStatus: -1, powerActionRequestedAt: -1, createdAt: -1 });
     res.render("user/vps", { user: res.locals.user, userVpsList });
   } catch (err) {
     res.send("Lỗi");
@@ -392,28 +393,32 @@ module.exports.postVpsAction = async (req, res) => {
       return res.send("VPS hết hạn hoặc bị khóa — không thể thao tác nguồn. Vui lòng gia hạn hoặc liên hệ admin.");
     }
 
-    if (action === "start") uv.status = "running";
-    else if (action === "stop") uv.status = "stopped";
-    else if (action === "restart") {
-      /* Giữ trạng thái hiển thị; admin làm thật trên máy chủ */
-    } else {
+    const actionNorm = String(action || "").toLowerCase();
+    if (!["start", "stop", "restart"].includes(actionNorm)) {
       return res.send("Thao tác không hợp lệ");
     }
 
+    if (uv.powerActionStatus === "pending" && uv.pendingPowerAction !== "none") {
+      return res.send("VPS đang có yêu cầu xử lý trước đó. Vui lòng đợi admin duyệt xong.");
+    }
+
+    uv.pendingPowerAction = actionNorm;
+    uv.powerActionStatus = "pending";
+    uv.powerActionRequestedAt = new Date();
     await uv.save();
 
-    const actionLabel =
-      action === "start" ? "start" : action === "stop" ? "stop" : action === "restart" ? "restart" : action;
     await tb_vps_logModel.create({
       userId: res.locals.user._id,
       ownerUserId: res.locals.user._id,
       userVpsId: uv._id,
-      action: actionLabel,
+      action: `${actionNorm}_request`,
       category: "control",
       description:
-        action === "restart"
-          ? "Yêu cầu khởi động lại VPS (admin xử lý thủ công khi online)"
-          : `Thực hiện thao tác: ${actionLabel}`,
+        actionNorm === "restart"
+          ? "Yêu cầu khởi động lại VPS (chờ admin duyệt)"
+          : actionNorm === "stop"
+            ? "Yêu cầu tắt VPS (chờ admin duyệt)"
+            : "Yêu cầu bật VPS (chờ admin duyệt)",
     });
 
     res.redirect("/user/vps");

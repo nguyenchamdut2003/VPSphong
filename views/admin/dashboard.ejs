@@ -19,6 +19,9 @@
       <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
         <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
       </a>
+      <a href="/admin/fix-requests" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-screwdriver-wrench w-5"></i> Đơn fix lỗi
+      </a>
       <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
         <i class="fa-solid fa-ticket w-5"></i> Voucher
       </a>
@@ -49,14 +52,34 @@
 
     <div class="p-8 flex-1">
       <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-l-4 border-blue-500 pl-3">Báo cáo Mới nhất</h2>
-      <div class="grid grid-cols-2 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
           <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-users"></i></div>
           <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">Tài khoản Đã Mở</p><p class="text-4xl font-extrabold text-gray-900"><%= totalUsers %></p></div>
         </div>
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
-          <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-server"></i></div>
-          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">Số Container Đang Chạy</p><p class="text-4xl font-extrabold text-gray-900"><%= totalVpsSold %></p></div>
+          <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-bag-shopping"></i></div>
+          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">VPS đã bán</p><p class="text-4xl font-extrabold text-gray-900"><%= totalVpsSold %></p></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
+          <div class="w-16 h-16 bg-cyan-50 text-cyan-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-box-open"></i></div>
+          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">VPS còn lại</p><p class="text-4xl font-extrabold text-gray-900"><%= totalVpsAvailable %></p></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
+          <div class="w-16 h-16 bg-lime-50 text-lime-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-power-off"></i></div>
+          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">VPS đang chạy</p><p class="text-4xl font-extrabold text-gray-900"><%= totalVpsRunning %></p></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
+          <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">Số lần đã fix</p><p class="text-4xl font-extrabold text-gray-900"><%= totalFixResolved %></p></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
+          <div class="w-16 h-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-wallet"></i></div>
+          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">Tiền khách chưa dùng</p><p class="text-2xl font-extrabold text-gray-900"><%= (totalCustomerBalance || 0).toLocaleString() %>đ</p></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-lg transition">
+          <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-3xl"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+          <div><p class="text-gray-500 font-semibold mb-1 text-sm uppercase tracking-wide">Tổng khách đã sử dụng</p><p class="text-2xl font-extrabold text-gray-900"><%= (totalCustomerUsed || 0).toLocaleString() %>đ</p></div>
         </div>
       </div>
     </div>
