@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Modal Thông Báo - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }
+    /* Preview modal */
+    #previewOverlay { position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center; }
+    #previewOverlay.show { display:flex; }
+    #previewDialog {
+      background:#fff; border-radius:.75rem; width:100%;max-width:460px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;
+      animation: popIn .25s ease;
+    }
+    @keyframes popIn { from{transform:scale(.92);opacity:0} to{transform:scale(1);opacity:1} }
+    .prev-header { display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.25rem;border-bottom:1px solid #e5e7eb; }
+    .prev-header h3 { font-size:1rem;font-weight:700;color:#111;margin:0; }
+    .prev-close-btn { width:1.75rem;height:1.75rem;border-radius:50%;border:none;background:#f3f4f6;cursor:pointer;color:#6b7280;font-size:.85rem;display:flex;align-items:center;justify-content:center; }
+    .prev-body { padding:1.25rem 1.5rem; }
+    .prev-links { display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin-top:1rem; }
+    .prev-fb-btn { display:inline-flex;align-items:center;gap:.5rem;background:#1877f2;color:#fff;padding:.5rem 1.1rem;border-radius:.4rem;font-weight:700;font-size:.85rem;text-decoration:none; }
+    .prev-zalo { color:#e11d48;font-weight:700;font-size:.85rem; }
+    .prev-footer { display:flex;justify-content:center;gap:.75rem;padding:.9rem 1.5rem;border-top:1px solid #f3f4f6; }
+    .prev-btn-hide { background:#ef4444;color:#fff;border:none;padding:.55rem 1.25rem;border-radius:.4rem;font-weight:700;font-size:.85rem;cursor:pointer; }
+    .prev-btn-close { background:#6b7280;color:#fff;border:none;padding:.55rem 1.25rem;border-radius:.4rem;font-weight:700;font-size:.85rem;cursor:pointer; }
+    /* Quill */
+    #editor { min-height:140px;font-size:.9rem; }
+    .ql-container { border-bottom-left-radius:.75rem; border-bottom-right-radius:.75rem; }
+    .ql-toolbar { border-top-left-radius:.75rem; border-top-right-radius:.75rem; }
+  </style>
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+</head>
+<body class="flex min-h-screen text-sm">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed shadow-xl z-20">
+    <div class="px-6 py-5 bg-gray-800 text-xl font-bold tracking-widest text-center border-b border-gray-700">AdminPanel</div>
+    <nav class="flex-1 mt-6 space-y-2 px-4">
+      <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
+      </a>
+      <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
+      </a>
+      <a href="/admin/fix-requests" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-screwdriver-wrench w-5"></i> Đơn fix lỗi
+      </a>
+      <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-ticket w-5"></i> Voucher
+      </a>
+      <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-users w-5"></i> Danh sách Khách
+      </a>
+      <a href="/admin/logs" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-clock-rotate-left w-5"></i> Báo cáo Log
+      </a>
+      <div class="pt-2 pb-1 px-2 text-xs font-bold text-gray-600 uppercase tracking-widest">Cài Đặt</div>
+      <a href="/admin/settings/support" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+        <i class="fa-solid fa-headset w-5"></i> Liên hệ hỗ trợ
+      </a>
+      <a href="/admin/settings/promo-modal" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-violet-600 text-white shadow-lg shadow-violet-500/30">
+        <i class="fa-solid fa-bullhorn w-5"></i> Modal Thông Báo
+      </a>
+    </nav>
+    <div class="p-6">
+      <a href="/" class="block w-full py-3 text-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition"><i class="fa-solid fa-house"></i> Về Website</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg border-l-4 border-violet-500 pl-3">Modal Thông Báo Popup</div>
+      <div class="flex items-center gap-5">
+        <span class="font-bold text-gray-900 px-3 py-1 bg-gray-100 rounded-lg"><i class="fa-solid fa-shield-halved text-blue-500 mr-2"></i><%= admin.username %></span>
+        <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1">
+      <% if (saved) { %>
+      <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+        Đã lưu! Khách hàng sẽ thấy thông báo mới ngay khi mở web (kể cả đã đóng trước đó).
+      </div>
+      <% } %>
+
+      <div class="grid lg:grid-cols-2 gap-8 max-w-6xl">
+        <!-- FORM -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <h2 class="font-black text-gray-800 text-base mb-6 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-violet-500"></i> Cấu hình thông báo
+          </h2>
+
+          <form id="modalForm" action="/admin/settings/promo-modal" method="POST" class="space-y-5">
+
+            <!-- Bật / Tắt -->
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="isEnabledChk" class="sr-only peer" <%= modal.isEnabled ? 'checked' : '' %>>
+                <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+              </label>
+              <input type="hidden" name="isEnabled" id="isEnabledHidden" value="<%= modal.isEnabled ? '1' : '0' %>">
+              <div>
+                <span class="font-bold text-gray-700">Bật thông báo popup</span>
+                <p class="text-xs text-gray-400 mt-0.5">Tắt = ẩn hoàn toàn với tất cả khách</p>
+              </div>
+            </div>
+
+            <!-- Tiêu đề -->
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tiêu đề thông báo</label>
+              <input type="text" id="inputTitle" name="title" value="<%= modal.title || 'Thông báo hệ thống' %>"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/30"
+                maxlength="200" placeholder="Thông báo hệ thống">
+            </div>
+
+            <!-- Nội dung -->
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nội dung (hỗ trợ định dạng)</label>
+              <div class="rounded-xl overflow-hidden border border-gray-200">
+                <div id="editor"><%- modal.bodyHtml || '' %></div>
+              </div>
+              <input type="hidden" name="bodyHtml" id="bodyHtmlInput">
+            </div>
+
+            <!-- Facebook & Zalo -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2"><i class="fa-brands fa-facebook text-blue-600 mr-1"></i> Link Facebook (tuỳ chọn)</label>
+                <input type="url" id="inputFb" name="facebookUrl" value="<%= modal.facebookUrl || '' %>"
+                  placeholder="https://facebook.com/..."
+                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/30">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2"><i class="fa-solid fa-comment-dots text-blue-500 mr-1"></i> Số Zalo (tuỳ chọn)</label>
+                <input type="text" id="inputZalo" name="zaloNumber" value="<%= modal.zaloNumber || '' %>"
+                  placeholder="0376 946 978"
+                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/30">
+              </div>
+            </div>
+
+            <!-- Thời gian ẩn -->
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Thời gian ẩn sau khi bấm "Ẩn trong X giờ"</label>
+              <select name="hideHours" id="inputHideHours"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/30 bg-white">
+                <% const hv = modal.hideHours || 1; %>
+                <option value="1"  <%= hv === 1  ? 'selected' : '' %>>1 giờ</option>
+                <option value="2"  <%= hv === 2  ? 'selected' : '' %>>2 giờ</option>
+                <option value="6"  <%= hv === 6  ? 'selected' : '' %>>6 giờ</option>
+                <option value="12" <%= hv === 12 ? 'selected' : '' %>>12 giờ</option>
+                <option value="24" <%= hv === 24 ? 'selected' : '' %>>1 ngày (24 giờ)</option>
+                <option value="72" <%= hv === 72 ? 'selected' : '' %>>3 ngày</option>
+                <option value="168" <%= hv === 168 ? 'selected' : '' %>>1 tuần</option>
+                <option value="0"  <%= hv === 0  ? 'selected' : '' %>>Không ẩn (luôn hiện lại)</option>
+              </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-3 pt-2">
+              <button type="button" id="previewBtn"
+                class="flex-1 py-3 rounded-xl border-2 border-violet-500 text-violet-600 font-bold hover:bg-violet-50 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-eye"></i> Xem Trước
+              </button>
+              <button type="submit"
+                class="flex-1 py-3 rounded-xl bg-gray-900 text-white font-bold hover:bg-violet-600 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- INFO -->
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-500"></i> Cách hoạt động</h3>
+            <ul class="text-sm text-gray-600 space-y-2.5">
+              <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5 shrink-0"></i> Modal hiện <strong>khi khách mở trang web</strong> (trang chủ và khu vực thành viên)</li>
+              <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5 shrink-0"></i> Khách bấm <strong>"Ẩn trong X giờ"</strong> → không hiện lại cho đến khi hết thời gian</li>
+              <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5 shrink-0"></i> Khách bấm <strong>"Đóng"</strong> → ẩn cho phiên hiện tại</li>
+              <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5 shrink-0"></i> Admin <strong>lưu cấu hình mới</strong> → khách thấy lại ngay lập tức</li>
+            </ul>
+          </div>
+
+          <div class="bg-amber-50 border border-amber-100 rounded-2xl p-6">
+            <h3 class="font-bold text-amber-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-amber-500"></i> Mẹo viết nội dung</h3>
+            <ul class="text-sm text-amber-800 space-y-2">
+              <li>• Dùng <strong>In đậm + màu</strong> để làm nổi bật câu quan trọng</li>
+              <li>• Ngắn gọn: 2–4 dòng là lý tưởng</li>
+              <li>• Điền link Facebook hoặc Zalo để khách liên hệ ngay</li>
+              <li>• Đặt thời gian ẩn hợp lý (1–6 giờ) để không làm phiền</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- PREVIEW OVERLAY -->
+  <div id="previewOverlay" onclick="closePreview(event)">
+    <div id="previewDialog">
+      <div class="prev-header">
+        <h3 id="prevTitle"><%= modal.title || 'Thông báo hệ thống' %></h3>
+        <button class="prev-close-btn" onclick="document.getElementById('previewOverlay').classList.remove('show')">✕</button>
+      </div>
+      <div class="prev-body">
+        <div id="prevBody" style="font-size:.9rem;color:#374151;line-height:1.75;"><%- modal.bodyHtml || '<p class="text-gray-400 italic text-sm">Chưa có nội dung.</p>' %></div>
+        <div class="prev-links" id="prevLinks">
+          <% if (modal.facebookUrl) { %>
+          <a id="prevFbBtn" href="<%= modal.facebookUrl %>" target="_blank" class="prev-fb-btn"><i class="fa-brands fa-facebook"></i> Liên hệ Facebook</a>
+          <% } %>
+          <% if (modal.zaloNumber) { %>
+          <span class="prev-zalo" id="prevZalo">Zalo: <strong><%= modal.zaloNumber %></strong></span>
+          <% } %>
+        </div>
+      </div>
+      <div class="prev-footer">
+        <button class="prev-btn-hide" id="prevHideBtn">Ẩn trong <span id="prevHideHours"><%= modal.hideHours || 1 %></span> giờ</button>
+        <button class="prev-btn-close" onclick="document.getElementById('previewOverlay').classList.remove('show')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
+  <script>
+    // Quill init
+    var quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Nhập nội dung thông báo…',
+      modules: {
+        toolbar: [
+          [{ header: [2, 3, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ color: [] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link'],
+          ['clean']
+        ]
+      }
+    });
+
+    // Toggle switch
+    var chk = document.getElementById('isEnabledChk');
+    var hiddenE = document.getElementById('isEnabledHidden');
+    chk.addEventListener('change', function() { hiddenE.value = chk.checked ? '1' : '0'; });
+
+    // Before submit: sync Quill HTML
+    document.getElementById('modalForm').addEventListener('submit', function() {
+      document.getElementById('bodyHtmlInput').value = quill.root.innerHTML;
+    });
+
+    // Live update preview
+    function updatePreview() {
+      document.getElementById('prevTitle').textContent = document.getElementById('inputTitle').value || 'Thông báo hệ thống';
+      document.getElementById('prevBody').innerHTML = quill.root.innerHTML;
+
+      var fbUrl = document.getElementById('inputFb').value.trim();
+      var zaloNum = document.getElementById('inputZalo').value.trim();
+      var hideH = document.getElementById('inputHideHours').value;
+
+      var linksEl = document.getElementById('prevLinks');
+      linksEl.innerHTML = '';
+      if (fbUrl) {
+        var fbA = document.createElement('a');
+        fbA.href = fbUrl; fbA.target = '_blank'; fbA.className = 'prev-fb-btn';
+        fbA.innerHTML = '<i class="fa-brands fa-facebook"></i> Liên hệ Facebook';
+        linksEl.appendChild(fbA);
+      }
+      if (zaloNum) {
+        var zSpan = document.createElement('span');
+        zSpan.className = 'prev-zalo';
+        zSpan.innerHTML = 'Zalo: <strong>' + zaloNum + '</strong>';
+        linksEl.appendChild(zSpan);
+      }
+
+      document.getElementById('prevHideHours').textContent = hideH;
+    }
+
+    quill.on('text-change', updatePreview);
+    ['inputTitle','inputFb','inputZalo','inputHideHours'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', updatePreview);
+      if (el && el.tagName === 'SELECT') el.addEventListener('change', updatePreview);
+    });
+
+    // Preview button
+    document.getElementById('previewBtn').addEventListener('click', function() {
+      updatePreview();
+      document.getElementById('previewOverlay').classList.add('show');
+    });
+    function closePreview(e) {
+      if (e.target === document.getElementById('previewOverlay')) {
+        document.getElementById('previewOverlay').classList.remove('show');
+      }
+    }
+  </script>
+</body>
+</html>

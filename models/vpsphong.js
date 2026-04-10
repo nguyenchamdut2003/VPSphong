@@ -225,6 +225,29 @@ const tb_site_settings = new mongoose.Schema(
   },
 );
 
+/**
+ * Modal quảng cáo popup — singleton, admin chỉnh tại /admin/settings/promo-modal
+ * version tăng mỗi khi admin lưu → client nhận ra đã xem version mới hay chưa.
+ */
+const tb_promo_modal = new mongoose.Schema(
+  {
+    isEnabled:   { type: Boolean, default: false },
+    title:       { type: String,  default: "Thông báo hệ thống" },
+    bodyHtml:    { type: String,  default: "" },
+    /** Nút liên hệ tuỳ chọn */
+    facebookUrl: { type: String,  default: "", trim: true },
+    zaloNumber:  { type: String,  default: "", trim: true },
+    /** Số giờ ẩn sau khi bấm 'Ẩn trong X giờ' */
+    hideHours:   { type: Number,  default: 1, min: 0 },
+    /** Tăng mỗi lần admin lưu ᄑể client force-show lại */
+    version:     { type: Number,  default: 1 },
+  },
+  {
+    collection: "promo_modal",
+    timestamps: true,
+  },
+);
+
 let tb_userModel = db.mongoose.model("users", tb_user);
 let tb_user_vpsModel = db.mongoose.model("user_vps", tb_user_vps);
 let tb_transactionModel = db.mongoose.model("transactions", tb_transaction);
@@ -234,6 +257,7 @@ let tb_vps_logModel = db.mongoose.model("vps_logs", tb_vps_log);
 let tb_site_settingsModel = db.mongoose.model("site_settings", tb_site_settings);
 let tb_voucherModel = db.mongoose.model("vouchers", tb_voucher);
 let tb_counterModel = db.mongoose.model("counters", tb_counter);
+let tb_promo_modalModel = db.mongoose.model("promo_modal", tb_promo_modal);
 
 module.exports = {
   tb_userModel,
@@ -245,4 +269,5 @@ module.exports = {
   tb_site_settingsModel,
   tb_voucherModel,
   tb_counterModel,
+  tb_promo_modalModel,
 };

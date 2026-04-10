@@ -1,0 +1,152 @@
+<%# Promo Modal Popup - dùng chung cho trang chủ và user dashboard %>
+<% if (typeof promoModal !== 'undefined' && promoModal && promoModal.isEnabled) { %>
+<style>
+  #pmOverlay {
+    position: fixed; inset: 0; z-index: 9990;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  #pmOverlay.pm-show { opacity: 1; pointer-events: all; }
+  #pmDialog {
+    background: #fff;
+    border-radius: .75rem;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    transform: scale(.93) translateY(12px);
+    transition: transform .3s cubic-bezier(.34,1.4,.64,1), opacity .25s;
+    opacity: 0;
+  }
+  #pmOverlay.pm-show #pmDialog { transform: scale(1) translateY(0); opacity: 1; }
+  .pm-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .9rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .pm-title { font-size: .95rem; font-weight: 700; color: #111827; margin: 0; }
+  .pm-close {
+    width: 1.8rem; height: 1.8rem; border-radius: 50%;
+    border: none; background: #f3f4f6; cursor: pointer;
+    color: #6b7280; font-size: .8rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .pm-close:hover { background: #e5e7eb; color: #111; }
+  .pm-body {
+    padding: 1.1rem 1.5rem;
+    font-size: .9rem; color: #374151; line-height: 1.75;
+  }
+  .pm-body p { margin: 0 0 .5em; }
+  .pm-body ul, .pm-body ol { padding-left: 1.3em; margin: .4em 0; }
+  .pm-body strong { color: #111827; }
+  .pm-links {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: .6rem; margin-top: .9rem;
+  }
+  .pm-fb-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: #1877f2; color: #fff !important;
+    padding: .45rem 1rem; border-radius: .375rem;
+    font-weight: 700; font-size: .82rem; text-decoration: none !important;
+    transition: background .15s;
+  }
+  .pm-fb-btn:hover { background: #1558b0; }
+  .pm-zalo { color: #e11d48; font-weight: 700; font-size: .85rem; }
+  .pm-footer {
+    display: flex; justify-content: center; gap: .6rem;
+    padding: .85rem 1.5rem;
+    border-top: 1px solid #f3f4f6;
+  }
+  .pm-btn-hide {
+    background: #ef4444; color: #fff; border: none;
+    padding: .5rem 1.1rem; border-radius: .375rem;
+    font-weight: 700; font-size: .82rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .pm-btn-hide:hover { background: #dc2626; }
+  .pm-btn-close {
+    background: #6b7280; color: #fff; border: none;
+    padding: .5rem 1.1rem; border-radius: .375rem;
+    font-weight: 700; font-size: .82rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .pm-btn-close:hover { background: #4b5563; }
+</style>
+
+<div id="pmOverlay" role="dialog" aria-modal="true" aria-label="Thông báo hệ thống">
+  <div id="pmDialog">
+    <div class="pm-header">
+      <h2 class="pm-title"><%- promoModal.title || 'Thông báo hệ thống' %></h2>
+      <button class="pm-close" onclick="pmClose()" aria-label="Đóng">✕</button>
+    </div>
+    <div class="pm-body">
+      <%- promoModal.bodyHtml || '' %>
+      <% if (promoModal.facebookUrl || promoModal.zaloNumber) { %>
+      <div class="pm-links">
+        <% if (promoModal.facebookUrl) { %>
+        <a href="<%- promoModal.facebookUrl %>" target="_blank" rel="noopener" class="pm-fb-btn">
+          <i class="fa-brands fa-facebook"></i> Liên hệ Facebook
+        </a>
+        <% } %>
+        <% if (promoModal.zaloNumber) { %>
+        <span class="pm-zalo">Zalo: <strong><%- promoModal.zaloNumber %></strong></span>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+    <div class="pm-footer">
+      <% if ((promoModal.hideHours || 0) > 0) { %>
+      <button class="pm-btn-hide" onclick="pmHide()">Ẩn trong <%- promoModal.hideHours || 1 %> giờ</button>
+      <% } %>
+      <button class="pm-btn-close" onclick="pmClose()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var VERSION    = <%- JSON.stringify(promoModal.version || 1) %>;
+  var HIDE_MS    = <%- JSON.stringify((promoModal.hideHours || 0) * 3600 * 1000) %>;
+  var KEY_VER    = 'vpsphong_promo_seen_v';
+  var KEY_HIDE   = 'vpsphong_promo_hide_until';
+
+  var seenVer    = parseInt(localStorage.getItem(KEY_VER)  || '0', 10);
+  var hideUntil  = parseInt(localStorage.getItem(KEY_HIDE) || '0', 10);
+  var now        = Date.now();
+
+  function showModal() {
+    var ov = document.getElementById('pmOverlay');
+    if (!ov) return;
+    setTimeout(function() { ov.classList.add('pm-show'); }, 450);
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { pmClose(); document.removeEventListener('keydown', esc); }
+    });
+    ov.addEventListener('click', function(e) { if (e.target === ov) pmClose(); });
+  }
+
+  window.pmClose = function() {
+    var ov = document.getElementById('pmOverlay');
+    if (ov) ov.classList.remove('pm-show');
+    /* Đánh dấu đã xem version này — ẩn cho phiên hiện tại */
+    localStorage.setItem(KEY_VER, String(VERSION));
+  };
+
+  window.pmHide = function() {
+    var ov = document.getElementById('pmOverlay');
+    if (ov) ov.classList.remove('pm-show');
+    /* Ẩn đến timestamp tương lai */
+    if (HIDE_MS > 0) {
+      localStorage.setItem(KEY_HIDE, String(Date.now() + HIDE_MS));
+    }
+    localStorage.setItem(KEY_VER, String(VERSION));
+  };
+
+  /* Hiện nếu: còn trong thời gian ẩn → không hiện; version mới hơn → hiện */
+  if (now < hideUntil) return; /* Đang bị ẩn */
+  if (seenVer >= VERSION) return; /* Đã xem version này */
+  showModal();
+})();
+</script>
+<% } %>

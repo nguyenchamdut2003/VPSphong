@@ -7,6 +7,7 @@ const {
   tb_vps_logModel,
   tb_site_settingsModel,
   tb_voucherModel,
+  tb_promo_modalModel,
 } = require("../models/vpsphong");
 const { getSiteSettings } = require("../utils/siteSettings");
 const { normalizeCode } = require("../utils/voucher");
@@ -601,3 +602,53 @@ module.exports.postDeleteVoucher = async (req, res) => {
     res.redirect("/admin/vouchers");
   }
 };
+
+/* ===== PROMO MODAL ===== */
+
+module.exports.getPromoModal = async (req, res) => {
+  try {
+    let modal = await tb_promo_modalModel.findOne().lean();
+    if (!modal) modal = await tb_promo_modalModel.create({});
+    res.render("admin/settings_promo_modal", {
+      admin: res.locals.user,
+      modal,
+      saved: req.query.saved === "1",
+      error: null,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Lỗi tải cấu hình modal");
+  }
+};
+
+module.exports.postPromoModal = async (req, res) => {
+  try {
+    const isEnabled   = req.body.isEnabled === "1";
+    const title       = String(req.body.title       || "").trim().slice(0, 200);
+    const bodyHtml    = String(req.body.bodyHtml    || "").trim().slice(0, 5000);
+    const facebookUrl = String(req.body.facebookUrl || "").trim().slice(0, 500);
+    const zaloNumber  = String(req.body.zaloNumber  || "").trim().slice(0, 50);
+    const hideHours   = Math.max(0, Math.min(720, Number(req.body.hideHours) || 1));
+
+    const existing = await tb_promo_modalModel.findOne();
+    if (existing) {
+      existing.isEnabled   = isEnabled;
+      existing.title       = title;
+      existing.bodyHtml    = bodyHtml;
+      existing.facebookUrl = facebookUrl;
+      existing.zaloNumber  = zaloNumber;
+      existing.hideHours   = hideHours;
+      existing.version     = (existing.version || 1) + 1;
+      await existing.save();
+    } else {
+      await tb_promo_modalModel.create({
+        isEnabled, title, bodyHtml, facebookUrl, zaloNumber, hideHours, version: 1,
+      });
+    }
+    res.redirect("/admin/settings/promo-modal?saved=1");
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Lỗi lưu cấu hình modal");
+  }
+};
+

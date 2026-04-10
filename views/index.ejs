@@ -367,8 +367,28 @@
 
         window.onload = () => {
             document.getElementById('tab-0').classList.add('active', 'bg-sky-50', 'text-sky-600');
-            setMonth(1); // Mặc định renderPlans sẽ được gọi trong này
+            setMonth(1);
+
+            // Password toggle
+            document.querySelectorAll('.user-vps-pw-toggle').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var cell = btn.closest('.user-vps-pw-cell');
+                    var masked = cell ? cell.querySelector('.user-vps-pw-masked') : null;
+                    var plain = cell ? cell.querySelector('.user-vps-pw-plain') : null;
+                    if (!masked || !plain) return;
+                    if (plain.classList.contains('hidden')) {
+                        plain.classList.remove('hidden'); masked.classList.add('hidden');
+                        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                    } else {
+                        plain.classList.add('hidden'); masked.classList.remove('hidden');
+                        btn.innerHTML = '<i class="fas fa-eye"></i>';
+                    }
+                });
+            });
         };
     </script>
+
+<%- include('partials/promo-modal', { promoModal: promoModal }) %>
+
 </body>
 </html>

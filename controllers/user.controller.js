@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const { tb_userModel, tb_vpsModel, tb_user_vpsModel, tb_transactionModel, tb_vps_logModel } = require("../models/vpsphong");
+const { tb_userModel, tb_vpsModel, tb_user_vpsModel, tb_transactionModel, tb_vps_logModel, tb_promo_modalModel } = require("../models/vpsphong");
 const { decrypt } = require("../utils/vpsCrypto");
 const { getVietQrConfigForUser } = require("../config/vietqr");
 const {
@@ -13,7 +13,13 @@ const {
 const { nextTransactionOrderNumber } = require("../utils/nextTransactionOrderNumber");
 
 module.exports.getDashboard = async (req, res) => {
-  res.render("user/dashboard", { user: res.locals.user });
+  try {
+    let promoModal = await tb_promo_modalModel.findOne().lean();
+    if (!promoModal) promoModal = { isEnabled: false };
+    res.render("user/dashboard", { user: res.locals.user, promoModal });
+  } catch (e) {
+    res.render("user/dashboard", { user: res.locals.user, promoModal: { isEnabled: false } });
+  }
 };
 
 /** Quản lý tài khoản (thông tin / đổi MK / 2FA / lịch sử hoạt động) */

@@ -26,6 +26,9 @@ router.get('/logs', adminController.getAllLogs);
 router.get('/settings/support', adminController.getSupportSettings);
 router.post('/settings/support', adminController.postSupportSettings);
 
+router.get('/settings/promo-modal', adminController.getPromoModal);
+router.post('/settings/promo-modal', adminController.postPromoModal);
+
 router.get('/vouchers', adminController.getVouchers);
 router.post('/vouchers/add', adminController.postAddVoucher);
 router.post('/vouchers/toggle', adminController.postToggleVoucher);

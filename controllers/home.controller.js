@@ -1,4 +1,4 @@
-const { tb_vpsModel, tb_userModel, tb_vps_categoryModel, tb_user_vpsModel, tb_transactionModel } = require("../models/vpsphong");
+const { tb_vpsModel, tb_userModel, tb_vps_categoryModel, tb_user_vpsModel, tb_transactionModel, tb_promo_modalModel } = require("../models/vpsphong");
 
 module.exports.getHome = async (req, res) => {
   try {
@@ -60,6 +60,12 @@ module.exports.getHome = async (req, res) => {
       if (payTx && typeof payTx.orderNumber === "number") demoPurchaseOrderNumber = payTx.orderNumber;
     }
 
+    let promoModal = { isEnabled: false };
+    try {
+      const pm = await tb_promo_modalModel.findOne().lean();
+      if (pm) promoModal = pm;
+    } catch(_) {}
+
     res.render("index", {
       vpsPackages: listVps,
       user,
@@ -68,6 +74,7 @@ module.exports.getHome = async (req, res) => {
       demoPurchaseOrderNumber,
       filterKind,
       filterCategoryName,
+      promoModal,
     });
   } catch (err) {
     console.log(err);
