@@ -9,38 +9,7 @@
 </head>
 <body class="flex min-h-screen text-sm">
 
-  <aside class="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed shadow-xl z-20">
-    <div class="px-6 py-5 bg-gray-800 text-xl font-bold tracking-widest text-center border-b border-gray-700">AdminPanel</div>
-    <nav class="flex-1 mt-6 space-y-2 px-4">
-      <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
-      </a>
-      <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
-      </a>
-      <a href="/admin/fix-requests" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-screwdriver-wrench w-5"></i> Đơn fix lỗi
-      </a>
-      <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-600 text-white shadow-lg shadow-amber-900/30">
-        <i class="fa-solid fa-ticket w-5"></i> Voucher
-      </a>
-      <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-users w-5"></i> Danh sách Khách
-      </a>
-      <a href="/admin/logs" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-clock-rotate-left w-5"></i> Báo cáo Log
-      </a>
-      <a href="/admin/settings/support" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-headset w-5"></i> Liên hệ hỗ trợ
-      </a>
-      <a href="/admin/settings/promo-modal" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
-        <i class="fa-solid fa-bullhorn w-5"></i> Modal Quảng Cáo
-      </a>
-    </nav>
-    <div class="p-6">
-      <a href="/" class="block w-full py-3 text-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition"><i class="fa-solid fa-house"></i> Về Website</a>
-    </div>
-  </aside>
+  <%- include('partials/sidebar', { activeMenu: 'vouchers' }) %>
 
   <main class="flex-1 ml-64 flex flex-col min-h-screen">
     <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">

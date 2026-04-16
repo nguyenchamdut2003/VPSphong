@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Backup dữ liệu - VPS Phong Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="flex min-h-screen text-sm">
+  <%- include('partials/sidebar', { activeMenu: 'backups' }) %>
+
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg border-l-4 border-blue-500 pl-3">Sao lưu dữ liệu hệ thống</div>
+      <div class="flex items-center gap-5">
+        <span class="font-bold text-gray-900 px-3 py-1 bg-gray-100 rounded-lg"><i class="fa-solid fa-shield-halved text-blue-500 mr-2"></i><%= admin.username %></span>
+        <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 space-y-6">
+      <% if (created) { %>
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+        Tạo file backup thành công.
+      </div>
+      <% } %>
+      <% if (error) { %>
+      <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+        Không thể tạo backup. Vui lòng thử lại.
+      </div>
+      <% } %>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-extrabold text-gray-900">Tạo backup mới</h2>
+            <p class="text-xs text-gray-500 mt-1">Mỗi lần tạo sẽ sinh một file `.json` mới, không ghi đè file backup cũ.</p>
+          </div>
+          <form action="/admin/backups/create" method="POST">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition">
+              <i class="fa-solid fa-floppy-disk mr-2"></i>Tạo backup ngay
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 font-bold text-gray-700">Lịch sử backup</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 border-b border-gray-100">
+              <tr>
+                <th class="px-5 py-3 font-bold">Tên file</th>
+                <th class="px-5 py-3 font-bold">Dung lượng</th>
+                <th class="px-5 py-3 font-bold">Thời gian tạo</th>
+                <th class="px-5 py-3 font-bold">Tải về</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% backupFiles.forEach((f) => { %>
+              <tr class="hover:bg-gray-50/70">
+                <td class="px-5 py-3 font-mono text-xs text-gray-800"><%= f.name %></td>
+                <td class="px-5 py-3 text-gray-700"><%= (Number(f.size || 0) / 1024).toFixed(1) %> KB</td>
+                <td class="px-5 py-3 text-gray-600"><%= new Date(f.createdAt).toLocaleString('vi-VN') %></td>
+                <td class="px-5 py-3">
+                  <a href="/admin/backups/<%= encodeURIComponent(f.name) %>/download" class="inline-flex items-center px-3 py-2 rounded-lg bg-gray-900 hover:bg-blue-600 text-white text-[11px] font-bold uppercase transition">Tải file</a>
+                </td>
+              </tr>
+              <% }) %>
+              <% if (!backupFiles.length) { %>
+              <tr><td colspan="4" class="px-5 py-10 text-center text-gray-400 font-medium">Chưa có file backup nào</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

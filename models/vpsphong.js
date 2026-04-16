@@ -89,11 +89,17 @@ const tb_transaction = new mongoose.Schema(
     amount: { type: Number, required: true },
     type: {
       type: String,
-      enum: ["deposit", "payment", "renew"],
+      enum: ["deposit", "payment", "renew", "withdraw"],
       required: true,
     },
     description: String,
     status: { type: String, enum: ["pending", "success", "failed", "cancelled"], default: "pending" },
+    withdrawInfo: {
+      bankName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      accountName: { type: String, default: "" },
+      note: { type: String, default: "" },
+    },
     voucherId: { type: mongoose.Schema.Types.ObjectId, ref: "vouchers" },
     /** Giá gốc gói trước giảm (khi dùng voucher) */
     originalAmount: { type: Number },
@@ -108,6 +114,25 @@ const tb_transaction = new mongoose.Schema(
 );
 tb_transaction.index({ userId: 1, createdAt: -1 });
 tb_transaction.index({ userVpsId: 1, createdAt: -1 });
+
+/** Log webhook Sepay để chống xử lý trùng giao dịch */
+const tb_sepay_webhook = new mongoose.Schema(
+  {
+    provider: { type: String, default: "sepay" },
+    providerTransactionId: { type: String, required: true },
+    status: { type: String, enum: ["processing", "processed", "failed"], default: "processing" },
+    payload: { type: mongoose.Schema.Types.Mixed, default: {} },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
+    username: { type: String, default: "" },
+    amount: { type: Number, default: 0 },
+    processedAt: { type: Date },
+  },
+  {
+    collection: "sepay_webhooks",
+    timestamps: true,
+  },
+);
+tb_sepay_webhook.index({ provider: 1, providerTransactionId: 1 }, { unique: true });
 
 /** Bộ đếm mã đơn (atomic) */
 const tb_counter = new mongoose.Schema(
@@ -258,6 +283,7 @@ let tb_site_settingsModel = db.mongoose.model("site_settings", tb_site_settings)
 let tb_voucherModel = db.mongoose.model("vouchers", tb_voucher);
 let tb_counterModel = db.mongoose.model("counters", tb_counter);
 let tb_promo_modalModel = db.mongoose.model("promo_modal", tb_promo_modal);
+let tb_sepay_webhookModel = db.mongoose.model("sepay_webhooks", tb_sepay_webhook);
 
 module.exports = {
   tb_userModel,
@@ -270,4 +296,5 @@ module.exports = {
   tb_voucherModel,
   tb_counterModel,
   tb_promo_modalModel,
+  tb_sepay_webhookModel,
 };

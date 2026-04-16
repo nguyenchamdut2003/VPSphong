@@ -1,4 +1,4 @@
-const { tb_vpsModel, tb_userModel, tb_vps_categoryModel, tb_user_vpsModel, tb_transactionModel, tb_promo_modalModel } = require("../models/vpsphong");
+const { tb_vpsModel, tb_userModel, tb_vps_categoryModel, tb_promo_modalModel } = require("../models/vpsphong");
 
 module.exports.getHome = async (req, res) => {
   try {
@@ -43,21 +43,9 @@ module.exports.getHome = async (req, res) => {
     // Check if user logged in to display user info on Navbar
     let user = null;
     let isAdmin = false;
-    let demoVps = null;
     if (req.session.userId) {
       user = await tb_userModel.findById(req.session.userId);
       if (user && user.role === "admin") isAdmin = true;
-      demoVps = await tb_user_vpsModel.findOne({ userId: req.session.userId }).populate({ path: 'vpsId', populate: { path: 'categoryId' } }).sort({ createdAt: -1 });
-    }
-
-    let demoPurchaseOrderNumber = null;
-    if (demoVps) {
-      const payTx = await tb_transactionModel
-        .findOne({ userVpsId: demoVps._id, type: "payment", status: "success" })
-        .sort({ createdAt: -1 })
-        .select("orderNumber")
-        .lean();
-      if (payTx && typeof payTx.orderNumber === "number") demoPurchaseOrderNumber = payTx.orderNumber;
     }
 
     let promoModal = { isEnabled: false };
@@ -70,8 +58,6 @@ module.exports.getHome = async (req, res) => {
       vpsPackages: listVps,
       user,
       isAdmin,
-      demoVps,
-      demoPurchaseOrderNumber,
       filterKind,
       filterCategoryName,
       promoModal,

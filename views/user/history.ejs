@@ -9,7 +9,7 @@
 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
   <div class="px-6 py-4 border-b border-gray-100">
     <h2 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3">Lịch Sử Giao Dịch</h2>
-    <p class="text-xs text-gray-500 mt-1">Nạp tiền, mua VPS, gia hạn</p>
+    <p class="text-xs text-gray-500 mt-1">Nạp tiền, rút tiền, mua VPS, gia hạn</p>
   </div>
 
   <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-50 bg-gray-50/50">
@@ -44,7 +44,9 @@
       </thead>
       <tbody id="histBody" class="divide-y divide-gray-100">
         <% transactions.forEach((tx, idx) => {
-             const typeLabel = tx.type === 'deposit' ? 'nạp tiền' : (tx.type === 'payment' ? 'mua mới' : 'gia hạn');
+             const typeLabel =
+               tx.type === 'deposit' ? 'nạp tiền'
+               : (tx.type === 'withdraw' ? 'rút tiền' : (tx.type === 'payment' ? 'mua mới' : 'gia hạn'));
              const ip = tx.userVpsId && tx.userVpsId.ip ? tx.userVpsId.ip : '';
              const ord = (typeof tx.orderNumber === 'number' && tx.orderNumber > 0) ? String(tx.orderNumber) : '';
              const blob = [typeLabel, ip, ord, (tx.description || '')].join(' ').toLowerCase();
@@ -55,6 +57,7 @@
           <td class="px-5 py-3 text-gray-600 whitespace-nowrap"><%= new Date(tx.createdAt).toLocaleString('vi-VN') %></td>
           <td class="px-5 py-3">
             <% if (tx.type === 'deposit') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-cyan-100 text-cyan-800">Nạp tiền</span><% } %>
+            <% if (tx.type === 'withdraw') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800">Rút tiền</span><% } %>
             <% if (tx.type === 'payment') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-blue-100 text-blue-800">Mua mới</span><% } %>
             <% if (tx.type === 'renew') { %><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-indigo-100 text-indigo-800">Gia hạn</span><% } %>
           </td>

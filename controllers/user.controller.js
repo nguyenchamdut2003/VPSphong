@@ -123,17 +123,21 @@ module.exports.postAccountPassword = async (req, res) => {
 module.exports.getChuyenKhoan = async (req, res) => {
   try {
     const userId = res.locals.user._id;
-    const deposits = await tb_transactionModel
-      .find({ userId, type: "deposit" })
+    const transactions = await tb_transactionModel
+      .find({ userId, type: { $in: ["deposit", "withdraw"] } })
       .sort({ createdAt: -1 })
       .lean();
     const vietqr = getVietQrConfigForUser(res.locals.user.username);
     const minDeposit = Number(process.env.VIETQR_MIN_AMOUNT || 0);
+    const minWithdraw = Number(process.env.WITHDRAW_MIN_AMOUNT || 50000);
     res.render("user/chuyen-khoan", {
       user: res.locals.user,
       vietqr,
-      deposits,
+      transactions,
       minDeposit: Number.isNaN(minDeposit) ? 0 : minDeposit,
+      minWithdraw: Number.isNaN(minWithdraw) ? 50000 : minWithdraw,
+      withdrawError: req.query.werr || null,
+      withdrawOk: req.query.wok === "1",
     });
   } catch (e) {
     console.log(e);
@@ -141,53 +145,109 @@ module.exports.getChuyenKhoan = async (req, res) => {
   }
 };
 
-// Nạp tiền (Mô phỏng)
-module.exports.postDeposit = async (req, res) => {
+module.exports.postWithdraw = async (req, res) => {
   try {
     const amount = Number(req.body.amount || 0);
-    if (amount <= 0) return res.redirect('/user/dashboard');
+    const bankName = String(req.body.bankName || "").trim();
+    const accountNumber = String(req.body.accountNumber || "").trim();
+    const accountName = String(req.body.accountName || "").trim();
+    const note = String(req.body.note || "").trim().slice(0, 300);
+    const minWithdraw = Number(process.env.WITHDRAW_MIN_AMOUNT || 50000);
 
-    const user = res.locals.user;
-    user.balance += amount;
+    if (!Number.isFinite(amount) || amount <= 0) return res.redirect("/user/chuyen-khoan?werr=invalid_amount");
+    if (amount < minWithdraw) return res.redirect("/user/chuyen-khoan?werr=min_amount");
+    if (!bankName || !accountNumber || !accountName) return res.redirect("/user/chuyen-khoan?werr=missing_info");
+
+    const user = await tb_userModel.findById(res.locals.user._id);
+    if (!user) return res.redirect("/login");
+    if (user.balance < amount) return res.redirect("/user/chuyen-khoan?werr=insufficient_balance");
+
+    user.balance -= amount;
     await user.save();
 
     await tb_transactionModel.create({
       userId: user._id,
       amount,
-      type: "deposit",
-      description: `Nạp tiền vào tài khoản: ${amount}`,
-      status: "success",
+      type: "withdraw",
+      description: `Yêu cầu rút tiền về ${bankName} - ${accountNumber}`,
+      status: "pending",
+      withdrawInfo: {
+        bankName,
+        accountNumber,
+        accountName,
+        note,
+      },
       orderNumber: await nextTransactionOrderNumber(),
     });
 
-    res.redirect("/user/chuyen-khoan");
+    await tb_vps_logModel.create({
+      userId: user._id,
+      ownerUserId: user._id,
+      action: "withdraw_request",
+      category: "billing",
+      description: `Tạo yêu cầu rút tiền ${amount.toLocaleString()}đ (${bankName})`,
+    });
+
+    return res.redirect("/user/chuyen-khoan?wok=1");
   } catch (err) {
     console.log(err);
-    res.send("Lỗi nạp tiền");
+    return res.redirect("/user/chuyen-khoan?werr=server_error");
   }
-}
+};
 
 // Mua VPS (có thể kèm mã voucher)
 module.exports.postBuyVps = async (req, res) => {
   let voucherReservedId = null;
   try {
     const vpsId = req.body.vpsId;
+    const months = Math.max(1, parseInt(req.body.months, 10) || 1);
+    const quantity = Math.max(1, parseInt(req.body.quantity, 10) || 1);
     const vpsData = await tb_vpsModel.findById(vpsId);
     if (!vpsData) return res.send("VPS không tồn tại");
     if (!vpsData.status || vpsData.isSold) return res.send("Gói này không còn sẵn sàng hoặc đã được bán.");
 
-    const originalPrice = Number(vpsData.price) || 0;
+    function discountPrice(base, months) {
+      let total = base * months;
+      if (months === 3) total *= 0.9;
+      if (months === 6) total *= 0.861;
+      if (months === 12) total *= 0.833;
+      return Math.floor(total);
+    }
+
+    const unitMonthPrice = Number(vpsData.price) || 0;
+    const unitOrderPrice = discountPrice(unitMonthPrice, months); // tiền cho 1 VPS instance (trong đúng số tháng)
+    const originalOrderPrice = unitOrderPrice * quantity; // tiền gốc cho cả đơn
+
     const rawVoucher = req.body.voucherCode;
-    let finalPrice = originalPrice;
+    let finalPrice = originalOrderPrice;
     let discountAmount = 0;
     let appliedVoucher = null;
+
+    // Tìm đủ "stock" (nhiều record vps cùng cấu hình) để mua số lượng
+    const availableVpsList = await tb_vpsModel
+      .find({
+        status: true,
+        isSold: { $ne: true },
+        name: vpsData.name,
+        cpu: vpsData.cpu,
+        ram: vpsData.ram,
+        disk: vpsData.disk,
+        price: vpsData.price,
+        ipLocation: vpsData.ipLocation,
+      })
+      .sort({ createdAt: 1 })
+      .limit(quantity);
+
+    if (!availableVpsList || availableVpsList.length < quantity) {
+      return res.send(`Số lượng VPS không đủ. Hiện có ${availableVpsList?.length || 0} gói cho cấu hình này.`);
+    }
 
     if (rawVoucher && String(rawVoucher).trim()) {
       const vDoc = await findEligibleVoucher(rawVoucher);
       if (!vDoc) {
         return res.send("Mã voucher không hợp lệ, đã hết hạn hoặc hết lượt dùng.");
       }
-      const calc = calculateVoucherDiscount(vDoc, originalPrice);
+      const calc = calculateVoucherDiscount(vDoc, originalOrderPrice);
       if (!calc.ok) return res.send(calc.error);
       finalPrice = calc.finalPrice;
       discountAmount = calc.discountAmount;
@@ -198,7 +258,7 @@ module.exports.postBuyVps = async (req, res) => {
     if (user.balance < finalPrice) {
       const extra =
         discountAmount > 0
-          ? ` (giá gốc ${originalPrice.toLocaleString()}đ, sau giảm còn ${finalPrice.toLocaleString()}đ)`
+          ? ` (giá gốc ${originalOrderPrice.toLocaleString()}đ, sau giảm còn ${finalPrice.toLocaleString()}đ)`
           : "";
       return res.send(
         `Không đủ số dư${extra}. Số dư hiện tại: ${user.balance.toLocaleString()}đ. Vui lòng nạp thêm.`,
@@ -216,67 +276,81 @@ module.exports.postBuyVps = async (req, res) => {
     user.balance -= finalPrice;
     await user.save();
 
-    const cycle = vpsData.billingCycleDays || 30;
-    let expireDate;
-    if (vpsData.durationKind === "until_date" && vpsData.rentValidUntil) {
-      expireDate = new Date(vpsData.rentValidUntil);
-    } else {
-      const firstDays = vpsData.initialRentDays || cycle;
-      expireDate = new Date();
-      expireDate.setDate(expireDate.getDate() + firstDays);
+    const createdUserVpsList = [];
+    for (const vp of availableVpsList) {
+      const cycle = vp.billingCycleDays || 30;
+      const unitDays = vp.initialRentDays || cycle;
+
+      let expireDate;
+      if (vp.durationKind === "until_date" && vp.rentValidUntil) {
+        expireDate = new Date(vp.rentValidUntil);
+        if (months > 1) expireDate.setDate(expireDate.getDate() + (months - 1) * unitDays);
+      } else {
+        expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() + unitDays * months);
+      }
+
+      const plainPass = vp.passwordEnc ? decrypt(vp.passwordEnc) : "";
+      const finalPassword = plainPass || Math.random().toString(36).slice(-10);
+      const ip =
+        (vp.serverIp && String(vp.serverIp).trim()) ||
+        `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      const sshUser = (vp.serverUsername && vp.serverUsername.trim()) || "root";
+
+      const newVps = await tb_user_vpsModel.create({
+        userId: user._id,
+        vpsId: vp._id,
+        displayName: vp.name,
+        ip,
+        username: sshUser,
+        password: finalPassword,
+        renewalPeriodDays: cycle,
+        expireDate,
+      });
+
+      vp.isSold = true;
+      vp.status = false;
+      await vp.save();
+
+      createdUserVpsList.push(newVps);
     }
-
-    const plainPass = vpsData.passwordEnc ? decrypt(vpsData.passwordEnc) : "";
-    const finalPassword = plainPass || Math.random().toString(36).slice(-10);
-    const ip =
-      (vpsData.serverIp && String(vpsData.serverIp).trim()) ||
-      `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-    const sshUser = (vpsData.serverUsername && vpsData.serverUsername.trim()) || "root";
-
-    const newVps = await tb_user_vpsModel.create({
-      userId: user._id,
-      vpsId: vpsData._id,
-      displayName: vpsData.name,
-      ip,
-      username: sshUser,
-      password: finalPassword,
-      renewalPeriodDays: cycle,
-      expireDate,
-    });
-
-    vpsData.isSold = true;
-    vpsData.status = false;
-    await vpsData.save();
 
     const codeNorm = appliedVoucher ? normalizeCode(rawVoucher) : "";
     const desc = appliedVoucher
-      ? `Mua VPS: ${vpsData.name} — Giá gốc ${originalPrice.toLocaleString()}đ, giảm ${discountAmount.toLocaleString()}đ (mã ${codeNorm}), thanh toán ${finalPrice.toLocaleString()}đ`
-      : `Mua gói VPS: ${vpsData.name} - Giá: ${vpsData.price}`;
+      ? `Mua VPS: ${vpsData.name} x${quantity} — Giá gốc ${originalOrderPrice.toLocaleString()}đ, giảm ${discountAmount.toLocaleString()}đ (mã ${codeNorm}), thanh toán ${finalPrice.toLocaleString()}đ`
+      : `Mua VPS: ${vpsData.name} x${quantity} — Thanh toán ${finalPrice.toLocaleString()}đ (${months} tháng)`;
+
+    const orderNumber = await nextTransactionOrderNumber();
 
     await tb_transactionModel.create({
       userId: user._id,
-      userVpsId: newVps._id,
+      userVpsId: quantity === 1 ? createdUserVpsList[0]?._id : undefined,
       vpsPlanId: vpsData._id,
       amount: finalPrice,
       type: "payment",
       description: desc,
       status: "success",
       voucherId: appliedVoucher ? appliedVoucher._id : undefined,
-      originalAmount: appliedVoucher ? originalPrice : undefined,
+      originalAmount: appliedVoucher ? originalOrderPrice : undefined,
       discountAmount: appliedVoucher ? discountAmount : 0,
-      orderNumber: await nextTransactionOrderNumber(),
+      orderNumber,
     });
 
-    await tb_vps_logModel.create({
-      userId: user._id,
-      ownerUserId: user._id,
-      userVpsId: newVps._id,
-      action: "buy",
-      category: "billing",
-      description: appliedVoucher
-        ? `Mua thành công VPS ${vpsData.name} (voucher ${codeNorm}, -${discountAmount}đ)`
-        : `Mua thành công VPS ${vpsData.name}`,
-    });
+    for (let idx = 0; idx < createdUserVpsList.length; idx++) {
+      const uv = createdUserVpsList[idx];
+      await tb_vps_logModel.create({
+        userId: user._id,
+        ownerUserId: user._id,
+        userVpsId: uv._id,
+        action: "buy",
+        category: "billing",
+        description: appliedVoucher
+          ? idx === 0
+            ? `Mua thành công VPS ${vpsData.name} x${quantity} (voucher ${codeNorm}, -${discountAmount}đ tổng)`
+            : `Mua thành công VPS ${vpsData.name}`
+          : `Mua thành công VPS ${vpsData.name}`,
+      });
+    }
 
     res.redirect("/user/vps");
   } catch (err) {

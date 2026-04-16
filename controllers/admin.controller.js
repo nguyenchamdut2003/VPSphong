@@ -12,6 +12,8 @@ const {
 const { getSiteSettings } = require("../utils/siteSettings");
 const { normalizeCode } = require("../utils/voucher");
 const { encrypt, decrypt } = require("../utils/vpsCrypto");
+const fs = require("fs/promises");
+const path = require("path");
 
 async function listVpsForAdminView() {
   const raw = await tb_vpsModel.find().populate("categoryId").sort({ createdAt: -1 }).lean();
@@ -408,6 +410,44 @@ module.exports.getUsersManager = async (req, res) => {
   res.render("admin/users", { admin: res.locals.user, users });
 };
 
+module.exports.getWithdrawRequests = async (req, res) => {
+  try {
+    const list = await tb_transactionModel
+      .find({ type: "withdraw" })
+      .populate("userId", "username email phone")
+      .sort({ createdAt: -1 })
+      .lean();
+    res.render("admin/withdraw_requests", { admin: res.locals.user, list });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Lỗi tải danh sách rút tiền");
+  }
+};
+
+module.exports.postApproveWithdraw = async (req, res) => {
+  try {
+    const txId = String(req.params.id || "");
+    const tx = await tb_transactionModel.findById(txId);
+    if (!tx || tx.type !== "withdraw") return res.redirect("/admin/withdraw-requests");
+
+    if (tx.status === "pending") {
+      tx.status = "success";
+      await tx.save();
+
+      await tb_vps_logModel.create({
+        userId: res.locals.user._id,
+        ownerUserId: tx.userId,
+        action: "withdraw_approved",
+        category: "admin",
+        description: `Admin duyệt yêu cầu rút tiền ${Number(tx.amount || 0).toLocaleString()}đ`,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return res.redirect("/admin/withdraw-requests");
+};
+
 module.exports.postToggleUserLock = async (req, res) => {
   const { blockUserId } = req.body;
   const user = await tb_userModel.findById(blockUserId);
@@ -649,6 +689,122 @@ module.exports.postPromoModal = async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).send("Lỗi lưu cấu hình modal");
+  }
+};
+
+const BACKUP_DIR = path.join(__dirname, "..", "backups");
+
+async function ensureBackupDir() {
+  await fs.mkdir(BACKUP_DIR, { recursive: true });
+}
+
+async function listBackupFiles() {
+  await ensureBackupDir();
+  const files = await fs.readdir(BACKUP_DIR);
+  const jsonFiles = files.filter((f) => f.toLowerCase().endsWith(".json"));
+
+  const withStats = await Promise.all(
+    jsonFiles.map(async (name) => {
+      const fullPath = path.join(BACKUP_DIR, name);
+      const st = await fs.stat(fullPath);
+      return {
+        name,
+        size: st.size,
+        createdAt: st.birthtime || st.ctime || st.mtime,
+      };
+    }),
+  );
+
+  return withStats.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+module.exports.getBackups = async (req, res) => {
+  try {
+    const backupFiles = await listBackupFiles();
+    res.render("admin/backups", {
+      admin: res.locals.user,
+      backupFiles,
+      created: req.query.created === "1",
+      error: req.query.err || null,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Lỗi tải trang backup");
+  }
+};
+
+module.exports.postCreateBackup = async (_req, res) => {
+  try {
+    await ensureBackupDir();
+
+    const [users, vps, userVps, transactions, logs, categories, vouchers, siteSettings, promoModal, sepayWebhooks] =
+      await Promise.all([
+        tb_userModel.find({}).lean(),
+        tb_vpsModel.find({}).lean(),
+        tb_user_vpsModel.find({}).lean(),
+        tb_transactionModel.find({}).lean(),
+        tb_vps_logModel.find({}).lean(),
+        tb_vps_categoryModel.find({}).lean(),
+        tb_voucherModel.find({}).lean(),
+        tb_site_settingsModel.find({}).lean(),
+        tb_promo_modalModel.find({}).lean(),
+        tb_sepay_webhookModel.find({}).lean(),
+      ]);
+
+    const now = new Date();
+    const stamp = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+      "-",
+      String(now.getHours()).padStart(2, "0"),
+      String(now.getMinutes()).padStart(2, "0"),
+      String(now.getSeconds()).padStart(2, "0"),
+    ].join("");
+
+    const fileName = `backup-${stamp}.json`;
+    const filePath = path.join(BACKUP_DIR, fileName);
+
+    const payload = {
+      meta: {
+        exportedAt: now.toISOString(),
+        app: "vpsphong",
+        version: 1,
+      },
+      data: {
+        users,
+        vps,
+        user_vps: userVps,
+        transactions,
+        vps_logs: logs,
+        vps_categories: categories,
+        vouchers,
+        site_settings: siteSettings,
+        promo_modal: promoModal,
+        sepay_webhooks: sepayWebhooks,
+      },
+    };
+
+    await fs.writeFile(filePath, JSON.stringify(payload, null, 2), "utf8");
+    return res.redirect("/admin/backups?created=1");
+  } catch (e) {
+    console.error(e);
+    return res.redirect("/admin/backups?err=create_failed");
+  }
+};
+
+module.exports.getDownloadBackup = async (req, res) => {
+  try {
+    const fileName = String(req.params.fileName || "");
+    if (!fileName.endsWith(".json")) return res.status(400).send("File không hợp lệ");
+    if (fileName.includes("/") || fileName.includes("\\") || fileName.includes("..")) {
+      return res.status(400).send("File không hợp lệ");
+    }
+    const filePath = path.join(BACKUP_DIR, fileName);
+    await fs.access(filePath);
+    return res.download(filePath, fileName);
+  } catch (e) {
+    return res.status(404).send("Không tìm thấy file backup");
   }
 };
 

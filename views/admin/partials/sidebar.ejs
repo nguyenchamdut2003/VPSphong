@@ -1,0 +1,39 @@
+<aside class="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed shadow-xl z-20">
+  <div class="px-6 py-5 bg-gray-800 text-xl font-bold tracking-widest text-center border-b border-gray-700">AdminPanel</div>
+  <% const m = typeof activeMenu === 'string' ? activeMenu : ''; %>
+  <nav class="flex-1 mt-6 space-y-2 px-4">
+    <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
+    </a>
+    <a href="/admin/vps" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'vps' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-server w-5"></i> Quản Lý Dịch Vụ
+    </a>
+    <a href="/admin/fix-requests" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'fix_requests' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-screwdriver-wrench w-5"></i> Đơn fix lỗi
+    </a>
+    <a href="/admin/withdraw-requests" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'withdraw_requests' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-money-bill-transfer w-5"></i> Đơn rút tiền
+    </a>
+    <a href="/admin/backups" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'backups' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-database w-5"></i> Backup dữ liệu
+    </a>
+    <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'vouchers' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-ticket w-5"></i> Voucher
+    </a>
+    <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'users' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-users w-5"></i> Danh sách Khách
+    </a>
+    <a href="/admin/logs" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'logs' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-clock-rotate-left w-5"></i> Báo cáo Log
+    </a>
+    <a href="/admin/settings/support" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'settings_support' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-headset w-5"></i> Liên hệ hỗ trợ
+    </a>
+    <a href="/admin/settings/promo-modal" class="flex items-center gap-3 px-4 py-3 rounded-lg <%= m === 'settings_promo_modal' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800 transition' %>">
+      <i class="fa-solid fa-bullhorn w-5"></i> Modal Quảng Cáo
+    </a>
+  </nav>
+  <div class="p-6">
+    <a href="/" class="block w-full py-3 text-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition"><i class="fa-solid fa-house"></i> Về Website</a>
+  </div>
+</aside>

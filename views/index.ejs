@@ -36,6 +36,7 @@
                 <a href="#mua-vps" class="hover:text-cyan-600 transition">Bảng Giá</a>
                 <% if (typeof user !== 'undefined' && user) { %>
                   <a href="/user/vps" class="hover:text-cyan-600 transition">Quản Lý VPS</a>
+                  <a href="/user/chuyen-khoan" class="hover:text-cyan-600 transition">Nạp Tiền</a>
                 <% } else { %>
                   <a href="/login" class="hover:text-cyan-600 transition">Hệ Thống</a>
                 <% } %>
@@ -65,7 +66,7 @@
                 <span class="text-lg md:text-xl font-bold tracking-widest text-sky-50 uppercase">NINJA SCHOOL VPS</span>
             </div>
             <h1 class="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6">Trải nghiệm vượt trội<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-100">Chơi NSO Siêu Mượt</span></h1>
-            <p class="text-lg md:text-2xl mb-12 text-sky-100 font-medium max-w-3xl mx-auto">Tối ưu riêng cho Ninja School và treo máy tự động. Proxy IP Sạch • Test lỗi đền tiền.</p>
+            <p class="text-lg md:text-2xl mb-12 text-sky-100 font-medium max-w-3xl mx-auto">Tối ưu riêng cho Ninja School và treo máy tự động. Proxy IP Sạch • Lỗi hoàn tiền.</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 <a href="#mua-vps" class="bg-white text-sky-600 px-8 py-4 rounded-full text-lg font-bold hover:scale-105 transition shadow-2xl shadow-cyan-900/50">Chọn Gói Cấu Hình Vừa Túi Tiền</a>
@@ -104,105 +105,13 @@
         <div id="content-2" class="tab-content hidden grid md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
     </section>
 
-    <!-- QUẢN LÝ VPS DEMO / REAL -->
     <section id="quan-ly" class="bg-sky-50/50 py-24 border-y border-sky-100">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-              <h2 class="text-4xl font-black text-gray-900 tracking-tight mb-4">Giao Diện Quản Lý Thông Minh</h2>
-              <p class="text-xl text-gray-500 font-medium">Bạn có thể điều khiển toàn bộ Server VPS chỉ với vài nút bấm dễ dàng.</p>
-            </div>
-            
-            <% 
-              let d_vpsName = "VPS Ninja School N-14X";
-              let d_vpsCode = "#VPS02341";
-              let d_cfg = "2 Core - 2GB RAM";
-              let d_ip = "103.XXX.XXX.XXX";
-              let d_user = "root";
-              let d_pass = "••••••••";
-              let d_pass_plain = "DemoNinja123";
-              let d_real = false;
-              let d_statusColor = "bg-emerald-500";
-              let d_statusAnim = "animate-pulse shadow-lg shadow-emerald-500/50";
-              
-              if (typeof demoVps !== 'undefined' && demoVps) {
-                  d_vpsName = demoVps.vpsId ? demoVps.vpsId.name : "VPS Tùy Chọn";
-                  if (demoVps.displayName && String(demoVps.displayName).trim()) {
-                    d_vpsName = String(demoVps.displayName).trim();
-                  }
-                  d_vpsCode = (demoVps.vpsId && typeof demoVps.vpsId.saleCode === 'number' && demoVps.vpsId.saleCode > 0) ? ("#vpsphong" + demoVps.vpsId.saleCode) : ("#vpsphong" + String(demoVps.vpsId ? demoVps.vpsId._id : '').slice(-6));
-                  d_cfg = demoVps.vpsId ? (demoVps.vpsId.cpu + ' Core - ' + demoVps.vpsId.ram + 'GB RAM') : "Không rõ";
-                  d_ip = demoVps.ip || "Đang cấp phát...";
-                  d_user = demoVps.username || "root";
-                  d_pass_plain = demoVps.password || "";
-                  d_pass = d_pass_plain ? "••••••••" : "—";
-                  d_real = true;
-                  
-                  if (demoVps.status === 'stopped') {
-                      d_statusColor = 'bg-amber-500'; d_statusAnim = '';
-                  } else if (demoVps.status === 'expired' || demoVps.status === 'suspended') {
-                      d_statusColor = 'bg-rose-500'; d_statusAnim = '';
-                  }
-              }
-            %>
-
-            <div class="bg-white rounded-[2rem] shadow-2xl shadow-sky-900/5 p-8 md:p-10 max-w-6xl mx-auto border border-sky-100 relative overflow-hidden user-vps-pw-cell">
-                <div class="absolute top-0 right-0 p-8 text-sky-50 pointer-events-none"><i class="fa-solid fa-server text-8xl"></i></div>
-                <div class="border border-gray-100 bg-gray-50 rounded-2xl p-6 md:p-8 flex flex-col lg:flex-row justify-between lg:items-center gap-8 relative z-10">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                           <div class="w-2.5 h-2.5 rounded-full <%= d_statusColor %> <%= d_statusAnim %>"></div>
-                           <h3 class="font-black text-xl text-gray-900"><%= d_vpsName %></h3>
-                        </div>
-                        <p class="text-sm text-gray-500 font-medium mb-4">
-                          <% if (d_real && typeof demoPurchaseOrderNumber === 'number' && demoPurchaseOrderNumber > 0) { %>
-                            Mã đơn: <span class="font-mono font-bold text-cyan-700"><%= demoPurchaseOrderNumber %></span>
-                            <span class="mx-1">•</span> Mã máy: <span class="font-mono text-gray-600"><%= d_vpsCode %></span>
-                          <% } else if (d_real) { %>
-                            Mã máy: <span class="font-mono text-gray-600"><%= d_vpsCode %></span>
-                          <% } else { %>
-                            Mã đơn (demo): <%= d_vpsCode %>
-                          <% } %>
-                          <span class="mx-1">•</span> Cấu hình: <%= d_cfg %>
-                        </p>
-                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-2 text-[13px] bg-white p-4 rounded-xl border border-sky-100 shadow-sm">
-                            <div class="font-medium text-gray-600 flex items-center">
-                                <span class="w-10 text-gray-400">IP:</span> 
-                                <span class="font-mono font-bold text-gray-900 ml-1 bg-sky-50 px-2 py-1 rounded text-sm"><%= d_ip %></span>
-                            </div>
-                            <div class="font-medium text-gray-600 flex items-center">
-                                <span class="w-10 text-gray-400">User:</span> 
-                                <span class="font-mono font-bold text-gray-900 ml-1 bg-gray-50 px-2 py-1 rounded text-sm"><%= d_user %></span>
-                            </div>
-                            <div class="font-medium text-gray-600 flex items-center gap-2 relative">
-                                <span class="w-10 text-gray-400">Pass:</span>
-                                <% if (d_pass_plain) { %>
-                                    <div class="bg-gray-50 px-2 py-1 rounded flex items-center gap-3">
-                                        <span class="user-vps-pw-masked font-mono font-bold text-gray-900 text-sm select-none tracking-widest mt-0.5">••••••••</span>
-                                        <span class="user-vps-pw-plain hidden font-mono font-bold text-gray-900 text-sm select-none"><%= d_pass_plain %></span>
-                                        <button class="user-vps-pw-toggle text-sky-500 hover:text-sky-600 transition"><i class="fas fa-eye"></i></button>
-                                    </div>
-                                <% } else { %>
-                                    <span class="bg-gray-50 text-gray-400 px-2 py-1 rounded font-mono text-sm">—</span>
-                                <% } %>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-3 shrink-0">
-                        <% if (d_real) { %>
-                            <a href="/user/vps" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-cyan-500/20 whitespace-nowrap"><i class="fa-solid fa-gear mr-1.5 text-cyan-200"></i> Vào Khu quản lý</a>
-                        <% } else { %>
-                            <button onclick="demoAlert('Khởi động lại')" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-amber-500/20"><i class="fa-solid fa-rotate-right mr-1.5"></i> Restart</button>
-                            <button onclick="demoAlert('Dừng')" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-rose-500/20"><i class="fa-solid fa-stop mr-1.5"></i> Stop</button>
-                            <button onclick="demoAlert('Bật')" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition shadow-md shadow-emerald-500/20"><i class="fa-solid fa-play mr-1.5"></i> Start</button>
-                        <% } %>
-                    </div>
-                </div>
-                <div class="mt-8 text-center border-t border-gray-100 pt-8">
-                    <button onclick="demoAlert('Gửi nhắc nhở')" class="text-sky-600 font-bold flex items-center gap-2 mx-auto hover:text-sky-700 bg-sky-50 px-6 py-3 rounded-full hover:bg-sky-100 transition border border-sky-100 shadow-sm">
-                        <i class="fa-solid fa-bell animate-bounce"></i> Nhắc tôi tự động gia hạn VPS (Zalo / FB)
-                    </button>
-                </div>
-            </div>
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <h2 class="text-4xl font-black text-gray-900 tracking-tight mb-4">Quản Lý VPS Tập Trung</h2>
+            <p class="text-xl text-gray-500 font-medium mb-8">Theo dõi trạng thái dịch vụ, lịch sử giao dịch và gia hạn tự động ngay trong khu vực khách hàng.</p>
+            <a href="<%=(typeof user!=='undefined'&&user)?'/user/vps':'/login'%>" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wide transition shadow-lg shadow-cyan-500/25">
+                Vào trang quản lý VPS
+            </a>
         </div>
     </section>
 
@@ -263,6 +172,25 @@
             return Math.floor(total);
         }
 
+        function updateCardTotalPrice(cardId, unitBasePrice, months) {
+            const qtyInput = document.getElementById(cardId + '-qty');
+            const qtyLabel = document.getElementById(cardId + '-qty-label');
+            const priceEl = document.getElementById(cardId + '-price');
+            if (!qtyInput || !qtyLabel || !priceEl) return;
+
+            let qty = parseInt(qtyInput.value, 10);
+            if (!Number.isFinite(qty) || qty < 1) qty = 1;
+            if (qtyInput.max && Number.isFinite(parseInt(qtyInput.max, 10))) {
+                qty = Math.min(qty, parseInt(qtyInput.max, 10));
+            }
+            qtyInput.value = String(qty);
+            qtyLabel.textContent = String(qty);
+
+            const unitTotal = discountPrice(unitBasePrice, months);
+            const total = unitTotal * qty;
+            priceEl.textContent = Math.floor(total / 1000) + 'k';
+        }
+
         function renderPlans() {
             const container = document.getElementById('content-' + selectedTab);
             container.innerHTML = '';
@@ -276,10 +204,15 @@
             list.forEach((vps, i) => {
                 const total = discountPrice(vps.price, currentMonth);
                 const isLogged = <%= (typeof user !== 'undefined' && user) ? 'true' : 'false' %>;
+                const cardId = `plan-${selectedTab}-${i}`;
                 
                 const formattedPrice = Math.floor(total / 1000) + 'k';
                 const location = vps.ipLocation || 'Singapore';
-                const shortSpecsHtml = `<p class="text-[11px] text-gray-500 font-bold mt-2 tracking-wide uppercase">${vps.disk}GB SSD • IP ${location}</p>`;
+                const bandwidthText = (vps.bandwidth === 0 || vps.bandwidth == null) ? 'Unlimited BW' : `${vps.bandwidth} Mbps`;
+                const shortSpecsHtml = `
+                    <p class="text-[11px] text-gray-500 font-bold mt-2 tracking-wide uppercase">${vps.cpu} Core • ${vps.ram}GB RAM • ${bandwidthText}</p>
+                    <p class="text-[11px] text-gray-500 font-bold mt-1 tracking-wide uppercase">${vps.disk}GB SSD • IP ${location}</p>
+                `;
 
                 let featuresHtml = '';
                 if (vps.features && vps.features.length > 0) {
@@ -303,8 +236,8 @@
                     </div>
                     
                     <div class="my-3 flex justify-center items-end gap-1">
-                      <span class="text-[2.75rem] font-black text-[#00a8cc] tracking-tighter leading-none">${formattedPrice}</span>
-                      <span class="text-[13px] font-medium text-[#00a8cc] pb-1">/ ${currentMonth} tháng</span>
+                      <span id="${cardId}-price" class="text-[2.75rem] font-black text-[#00a8cc] tracking-tighter leading-none">${formattedPrice}</span>
+                      <span class="text-[13px] font-medium text-[#00a8cc] pb-1">/ ${currentMonth} tháng • x<span id="${cardId}-qty-label">1</span></span>
                     </div>
                     
                     <ul class="flex flex-col items-center gap-2.5 flex-1 pt-6 pb-6 border-t border-dashed border-gray-100 mt-2">
@@ -314,10 +247,32 @@
                     <form action="/user/buy-vps" method="POST" class="mt-auto relative w-full">
                         <input type="hidden" name="vpsId" value="${vps._id}">
                         <input type="hidden" name="months" value="${currentMonth}">
+                        <div class="px-2 mb-3">
+                          <input
+                            type="text"
+                            name="voucherCode"
+                            placeholder="Mã giảm giá (nếu có)"
+                            class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-400"
+                          />
+                        </div>
+                        <div class="px-2 mb-3">
+                          <label class="block text-[11px] font-bold text-gray-600 mb-1">Số lượng</label>
+                          <input
+                            type="number"
+                            name="quantity"
+                            id="${cardId}-qty"
+                            min="1"
+                            max="${vps.stock ? vps.stock : 1}"
+                            step="1"
+                            value="1"
+                            oninput="updateCardTotalPrice('${cardId}', ${vps.price}, ${currentMonth})"
+                            class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-400"
+                          />
+                        </div>
                         ${isLogged ? `
-                            <button type="submit" class="w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</button>
+                          <button type="submit" class="w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</button>
                         ` : `
-                            <a href="/login" class="flex items-center justify-center w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</a>
+                          <a href="/login" class="flex items-center justify-center w-full bg-[#00a8cc] hover:bg-[#008ba8] text-white font-medium text-[13px] py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/20">Thuê ngay</a>
                         `}
                     </form>
                 `;
@@ -351,40 +306,9 @@
             renderPlans();
         }
 
-        function toggleIP(id) { 
-            const el = document.getElementById('ip'+id); 
-            if(el.textContent.includes('XXX')) { el.textContent = '103.145.67.89'; el.classList.add("text-emerald-600");}
-            else { el.textContent = '103.XXX.XXX.XXX'; el.classList.remove("text-emerald-600");}
-        }
-        function togglePass(id) {
-             const el = document.getElementById('pass'+id); 
-             if(el.textContent === '••••••••') { el.textContent = 'DemoNinja123'; el.classList.add("text-emerald-600");}
-             else { el.textContent = '••••••••'; el.classList.remove("text-emerald-600");}
-        }
-        function demoAlert(action) { 
-             alert('✅ Nút ' + action + ' VPS đã nhận lệnh (Demo mode)!'); 
-        }
-
         window.onload = () => {
             document.getElementById('tab-0').classList.add('active', 'bg-sky-50', 'text-sky-600');
             setMonth(1);
-
-            // Password toggle
-            document.querySelectorAll('.user-vps-pw-toggle').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var cell = btn.closest('.user-vps-pw-cell');
-                    var masked = cell ? cell.querySelector('.user-vps-pw-masked') : null;
-                    var plain = cell ? cell.querySelector('.user-vps-pw-plain') : null;
-                    if (!masked || !plain) return;
-                    if (plain.classList.contains('hidden')) {
-                        plain.classList.remove('hidden'); masked.classList.add('hidden');
-                        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-                    } else {
-                        plain.classList.add('hidden'); masked.classList.remove('hidden');
-                        btn.innerHTML = '<i class="fas fa-eye"></i>';
-                    }
-                });
-            });
         };
     </script>
 

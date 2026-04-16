@@ -15,6 +15,8 @@ router.get('/vps/:id/edit', adminController.getEditVps);
 router.post('/vps/:id/update', adminController.postUpdateVps);
 router.get('/fix-requests', adminController.getFixRequests);
 router.post('/fix-requests/:id/resolve', adminController.postResolveFixRequest);
+router.get('/withdraw-requests', adminController.getWithdrawRequests);
+router.post('/withdraw-requests/:id/approve', adminController.postApproveWithdraw);
 
 router.get('/users', adminController.getUsersManager);
 router.post('/users/toggle-lock', adminController.postToggleUserLock);
@@ -33,5 +35,9 @@ router.get('/vouchers', adminController.getVouchers);
 router.post('/vouchers/add', adminController.postAddVoucher);
 router.post('/vouchers/toggle', adminController.postToggleVoucher);
 router.post('/vouchers/delete', adminController.postDeleteVoucher);
+
+router.get('/backups', adminController.getBackups);
+router.post('/backups/create', adminController.postCreateBackup);
+router.get('/backups/:fileName/download', adminController.getDownloadBackup);
 
 module.exports = router;
