@@ -7,12 +7,12 @@
 }) %>
 
 <div class="space-y-6">
-  <% if (withdrawOk) { %>
+  <% if (typeof withdrawOk !== 'undefined' && withdrawOk) { %>
   <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
     Tạo yêu cầu rút tiền thành công. Admin sẽ xử lý và cập nhật trạng thái trong lịch sử giao dịch.
   </div>
   <% } %>
-  <% if (withdrawError) { %>
+  <% if (typeof withdrawError !== 'undefined' && withdrawError) { %>
   <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
     <% if (withdrawError === 'invalid_amount') { %>Số tiền rút không hợp lệ.<% } %>
     <% if (withdrawError === 'min_amount') { %>Số tiền rút phải lớn hơn hoặc bằng <%= Number(minWithdraw || 0).toLocaleString() %>đ.<% } %>
