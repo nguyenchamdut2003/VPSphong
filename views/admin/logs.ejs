@@ -22,6 +22,7 @@
     </header>
 
     <div class="p-8 flex-1">
+      <% const _logs = (typeof logs !== 'undefined' && Array.isArray(logs)) ? logs : []; %>
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-left border-collapse">
           <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
@@ -34,7 +35,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-800">
-            <% logs.forEach(log => { %>
+            <% _logs.forEach(log => { %>
               <tr class="hover:bg-gray-50 transition">
                 <td class="px-6 py-4 text-xs font-mono text-gray-500"><i class="fa-regular fa-clock mr-1"></i> <%= new Date(log.createdAt).toLocaleString("vi-VN") %></td>
                 <td class="px-6 py-4 font-bold text-blue-600"><%= log.userId ? log.userId.username : 'Bot Ẩn Danh' %></td>

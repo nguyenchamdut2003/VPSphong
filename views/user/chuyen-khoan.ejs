@@ -6,6 +6,17 @@
   headerSubtitle: 'Chuyển khoản ngân hàng'
 }) %>
 
+<%
+  const _minWithdraw = (() => {
+    const v = typeof minWithdraw !== 'undefined' ? Number(minWithdraw) : 50000;
+    return Number.isNaN(v) ? 50000 : v;
+  })();
+  const _minDeposit = (() => {
+    const v = typeof minDeposit !== 'undefined' ? Number(minDeposit) : 0;
+    return Number.isNaN(v) ? 0 : v;
+  })();
+  const _transactions = (typeof transactions !== 'undefined' && Array.isArray(transactions)) ? transactions : [];
+%>
 <div class="space-y-6">
   <% if (typeof withdrawOk !== 'undefined' && withdrawOk) { %>
   <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
@@ -15,7 +26,7 @@
   <% if (typeof withdrawError !== 'undefined' && withdrawError) { %>
   <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
     <% if (withdrawError === 'invalid_amount') { %>Số tiền rút không hợp lệ.<% } %>
-    <% if (withdrawError === 'min_amount') { %>Số tiền rút phải lớn hơn hoặc bằng <%= Number(minWithdraw || 0).toLocaleString() %>đ.<% } %>
+    <% if (withdrawError === 'min_amount') { %>Số tiền rút phải lớn hơn hoặc bằng <%= _minWithdraw.toLocaleString() %>đ.<% } %>
     <% if (withdrawError === 'missing_info') { %>Vui lòng nhập đầy đủ thông tin nhận tiền.<% } %>
     <% if (withdrawError === 'insufficient_balance') { %>Số dư không đủ để tạo yêu cầu rút tiền.<% } %>
     <% if (withdrawError === 'server_error') { %>Có lỗi xảy ra, vui lòng thử lại.<% } %>
@@ -55,7 +66,7 @@
           </div>
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 py-2 border-b border-gray-100">
             <span class="text-gray-500 font-semibold shrink-0">Tối thiểu nạp</span>
-            <span class="font-bold text-gray-900"><%= Number(minDeposit || 0).toLocaleString() %> VNĐ</span>
+            <span class="font-bold text-gray-900"><%= _minDeposit.toLocaleString() %> VNĐ</span>
           </div>
           <div class="rounded-xl bg-red-50 border border-red-100 p-4">
             <div class="text-xs font-bold text-red-800 uppercase tracking-wide mb-1">Nội dung chuyển khoản (bắt buộc)</div>
@@ -99,7 +110,7 @@
       <form action="/user/withdraw" method="POST" class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Số tiền rút</label>
-          <input type="number" name="amount" min="<%= Number(minWithdraw || 0) %>" step="1000" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-400/40" placeholder="Ví dụ: 100000">
+          <input type="number" name="amount" min="<%= _minWithdraw %>" step="1000" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-400/40" placeholder="Ví dụ: 100000">
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Ngân hàng nhận</label>
@@ -118,7 +129,7 @@
           <input type="text" name="note" maxlength="300" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-400/40" placeholder="Ghi chú thêm cho admin">
         </div>
         <div class="md:col-span-2 flex items-center justify-between gap-4 pt-2">
-          <p class="text-xs text-gray-500">Tối thiểu rút: <strong><%= Number(minWithdraw || 0).toLocaleString() %>đ</strong></p>
+          <p class="text-xs text-gray-500">Tối thiểu rút: <strong><%= _minWithdraw.toLocaleString() %>đ</strong></p>
           <button type="submit" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-extrabold transition">Tạo yêu cầu rút tiền</button>
         </div>
       </form>
@@ -132,7 +143,7 @@
       <p class="text-xs text-gray-500 mt-1">Hiển thị giao dịch nạp tiền và yêu cầu rút tiền</p>
     </div>
 
-    <% if (!transactions.length) { %>
+    <% if (!_transactions.length) { %>
     <div class="p-10 text-center text-gray-500 text-sm font-medium">Chưa có lần nạp nào</div>
     <% } else { %>
     <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-50 bg-gray-50/50">
@@ -167,7 +178,7 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           <% const bankCol = (vietqr && vietqr.enabled) ? vietqr.bankLabel : '—'; %>
-          <% transactions.forEach((tx, idx) => {
+          <% _transactions.forEach((tx, idx) => {
                const hx = String(tx._id || '').replace(/[^a-f0-9]/gi, '');
                const tail = hx.slice(-8);
                const legacyMcode = tail ? ((parseInt(tail, 16) % 9000) + 1000) : '—';
@@ -231,7 +242,7 @@ document.querySelectorAll('.copy-ck').forEach(function (btn) {
     }
   });
 });
-<% if (transactions.length) { %>
+<% if (_transactions.length) { %>
 (function () {
   var rows = Array.prototype.slice.call(document.querySelectorAll('tr.dep-row'));
   var sizeEl = document.getElementById('depPageSize');

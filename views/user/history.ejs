@@ -6,6 +6,7 @@
   headerSubtitle: 'Quản Lý Cloud VPS'
 }) %>
 
+<% const _transactions = (typeof transactions !== 'undefined' && Array.isArray(transactions)) ? transactions : []; %>
 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
   <div class="px-6 py-4 border-b border-gray-100">
     <h2 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3">Lịch Sử Giao Dịch</h2>
@@ -43,7 +44,7 @@
         </tr>
       </thead>
       <tbody id="histBody" class="divide-y divide-gray-100">
-        <% transactions.forEach((tx, idx) => {
+        <% _transactions.forEach((tx, idx) => {
              const typeLabel =
                tx.type === 'deposit' ? 'nạp tiền'
                : (tx.type === 'withdraw' ? 'rút tiền' : (tx.type === 'payment' ? 'mua mới' : 'gia hạn'));
@@ -71,14 +72,14 @@
           <td class="px-5 py-3"><span class="px-2 py-1 rounded-md text-[11px] font-bold bg-gray-100 text-gray-700"><%= tx.status %></span></td>
         </tr>
         <% }) %>
-        <% if (transactions.length === 0) { %>
+        <% if (_transactions.length === 0) { %>
         <tr><td colspan="7" class="px-5 py-10 text-center text-gray-500 font-medium">Chưa có giao dịch</td></tr>
         <% } %>
       </tbody>
     </table>
   </div>
 
-  <% if (transactions.length) { %>
+  <% if (_transactions.length) { %>
   <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-100 bg-gray-50/50 text-xs text-gray-600">
     <div id="histInfo">Showing 0 to 0 of 0 entries</div>
     <div class="flex items-center gap-2">
@@ -90,7 +91,7 @@
   <% } %>
 </div>
 
-<% if (transactions.length) { %>
+<% if (_transactions.length) { %>
 <script>
 (function () {
   var rows = Array.prototype.slice.call(document.querySelectorAll('tr.hist-row'));

@@ -6,6 +6,7 @@
   headerSubtitle: 'Quản Lý Cloud VPS'
 }) %>
 
+<% const _logs = (typeof logs !== 'undefined' && Array.isArray(logs)) ? logs : []; %>
 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
   <div class="px-6 py-4 border-b border-gray-100">
     <h2 class="text-lg font-extrabold text-gray-900 border-l-4 border-cyan-500 pl-3">Lịch Sử Thao Tác</h2>
@@ -41,7 +42,7 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
-        <% logs.forEach((log, idx) => {
+        <% _logs.forEach((log, idx) => {
              const ip = log.userVpsId && log.userVpsId.ip ? log.userVpsId.ip : '';
              const blob = [log.action || '', ip, (log.description || '')].join(' ').toLowerCase();
         %>
@@ -59,14 +60,14 @@
           <td class="px-5 py-3 text-gray-600 text-[11px] max-w-md"><%= log.description || '' %></td>
         </tr>
         <% }) %>
-        <% if (logs.length === 0) { %>
+        <% if (_logs.length === 0) { %>
         <tr><td colspan="5" class="px-5 py-10 text-center text-gray-500 font-medium">Chưa có thao tác</td></tr>
         <% } %>
       </tbody>
     </table>
   </div>
 
-  <% if (logs.length) { %>
+  <% if (_logs.length) { %>
   <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-100 bg-gray-50/50 text-xs text-gray-600">
     <div id="logInfo">Showing 0 to 0 of 0 entries</div>
     <div class="flex items-center gap-2">
@@ -78,7 +79,7 @@
   <% } %>
 </div>
 
-<% if (logs.length) { %>
+<% if (_logs.length) { %>
 <script>
 (function () {
   var rows = Array.prototype.slice.call(document.querySelectorAll('tr.log-row'));
