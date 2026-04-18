@@ -19,6 +19,7 @@ router.get('/withdraw-requests', adminController.getWithdrawRequests);
 router.post('/withdraw-requests/:id/approve', adminController.postApproveWithdraw);
 
 router.get('/users', adminController.getUsersManager);
+router.post('/users/adjust-balance', adminController.postAdjustUserBalance);
 router.post('/users/toggle-lock', adminController.postToggleUserLock);
 router.get('/users/:id', adminController.getUserDetail);
 router.post('/users/:id/vps-rename', adminController.postRenameUserVps);

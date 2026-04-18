@@ -89,7 +89,7 @@ const tb_transaction = new mongoose.Schema(
     amount: { type: Number, required: true },
     type: {
       type: String,
-      enum: ["deposit", "payment", "renew", "withdraw"],
+      enum: ["deposit", "payment", "renew", "withdraw", "admin_credit", "admin_debit"],
       required: true,
     },
     description: String,

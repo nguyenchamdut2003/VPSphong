@@ -11,6 +11,7 @@ const {
 } = require("../models/vpsphong");
 const { getSiteSettings } = require("../utils/siteSettings");
 const { normalizeCode } = require("../utils/voucher");
+const { nextTransactionOrderNumber } = require("../utils/nextTransactionOrderNumber");
 const { encrypt, decrypt } = require("../utils/vpsCrypto");
 const fs = require("fs/promises");
 const path = require("path");
@@ -407,7 +408,57 @@ module.exports.postResolveFixRequest = async (req, res) => {
 
 module.exports.getUsersManager = async (req, res) => {
   const users = await tb_userModel.find({ role: "customer" });
-  res.render("admin/users", { admin: res.locals.user, users });
+  const balanceFlash =
+    req.query.bal_ok === "1" ? "ok" : req.query.bal_err ? String(req.query.bal_err) : null;
+  res.render("admin/users", { admin: res.locals.user, users, balanceFlash });
+};
+
+module.exports.postAdjustUserBalance = async (req, res) => {
+  const err = (code) => res.redirect(`/admin/users?bal_err=${code}`);
+  try {
+    const userId = String(req.body.userId || "").trim();
+    const direction = String(req.body.direction || "").toLowerCase();
+    const amount = Number(req.body.amount || 0);
+    const note = String(req.body.note || "").trim().slice(0, 300);
+
+    if (!userId) return err("invalid");
+    const target = await tb_userModel.findById(userId);
+    if (!target || target.role !== "customer") return err("user");
+
+    if (direction !== "add" && direction !== "sub") return err("invalid");
+    if (!Number.isFinite(amount) || amount < 1000 || amount % 1000 !== 0) return err("amount");
+
+    const delta = direction === "add" ? amount : -amount;
+    const newBal = (Number(target.balance) || 0) + delta;
+    if (newBal < 0) return err("insufficient");
+
+    target.balance = newBal;
+    await target.save();
+
+    const txType = direction === "add" ? "admin_credit" : "admin_debit";
+    const defaultDesc = direction === "add" ? "Admin cộng tiền" : "Admin trừ tiền";
+    await tb_transactionModel.create({
+      userId: target._id,
+      amount,
+      type: txType,
+      description: note || defaultDesc,
+      status: "success",
+      orderNumber: await nextTransactionOrderNumber(),
+    });
+
+    await tb_vps_logModel.create({
+      userId: res.locals.user._id,
+      ownerUserId: target._id,
+      action: direction === "add" ? "balance_admin_credit" : "balance_admin_debit",
+      category: "admin",
+      description: `${direction === "add" ? "Cộng" : "Trừ"} ${amount.toLocaleString()}đ vào ví khách${note ? ` — ${note}` : ""}`,
+    });
+
+    return res.redirect("/admin/users?bal_ok=1");
+  } catch (e) {
+    console.error(e);
+    return err("server");
+  }
 };
 
 module.exports.getWithdrawRequests = async (req, res) => {

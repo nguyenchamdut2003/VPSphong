@@ -24,7 +24,6 @@ router.get('/dashboard', userController.getDashboard);
 router.get('/account', userController.getAccount);
 router.post('/account/password', userController.postAccountPassword);
 router.get('/chuyen-khoan', userController.getChuyenKhoan);
-router.post('/withdraw', userController.postWithdraw);
 router.post('/buy-vps', userController.postBuyVps);
 
 router.get('/vps', userController.getMyVps);

@@ -124,74 +124,20 @@ module.exports.getChuyenKhoan = async (req, res) => {
   try {
     const userId = res.locals.user._id;
     const transactions = await tb_transactionModel
-      .find({ userId, type: { $in: ["deposit", "withdraw"] } })
+      .find({ userId, type: "deposit" })
       .sort({ createdAt: -1 })
       .lean();
     const vietqr = getVietQrConfigForUser(res.locals.user.username);
     const minDeposit = Number(process.env.VIETQR_MIN_AMOUNT || 0);
-    const minWithdraw = Number(process.env.WITHDRAW_MIN_AMOUNT || 50000);
     res.render("user/chuyen-khoan", {
       user: res.locals.user,
       vietqr,
       transactions,
       minDeposit: Number.isNaN(minDeposit) ? 0 : minDeposit,
-      minWithdraw: Number.isNaN(minWithdraw) ? 50000 : minWithdraw,
-      withdrawError: req.query.werr || null,
-      withdrawOk: req.query.wok === "1",
     });
   } catch (e) {
     console.log(e);
     res.send("Lỗi tải trang");
-  }
-};
-
-module.exports.postWithdraw = async (req, res) => {
-  try {
-    const amount = Number(req.body.amount || 0);
-    const bankName = String(req.body.bankName || "").trim();
-    const accountNumber = String(req.body.accountNumber || "").trim();
-    const accountName = String(req.body.accountName || "").trim();
-    const note = String(req.body.note || "").trim().slice(0, 300);
-    const minWithdraw = Number(process.env.WITHDRAW_MIN_AMOUNT || 50000);
-
-    if (!Number.isFinite(amount) || amount <= 0) return res.redirect("/user/chuyen-khoan?werr=invalid_amount");
-    if (amount < minWithdraw) return res.redirect("/user/chuyen-khoan?werr=min_amount");
-    if (!bankName || !accountNumber || !accountName) return res.redirect("/user/chuyen-khoan?werr=missing_info");
-
-    const user = await tb_userModel.findById(res.locals.user._id);
-    if (!user) return res.redirect("/login");
-    if (user.balance < amount) return res.redirect("/user/chuyen-khoan?werr=insufficient_balance");
-
-    user.balance -= amount;
-    await user.save();
-
-    await tb_transactionModel.create({
-      userId: user._id,
-      amount,
-      type: "withdraw",
-      description: `Yêu cầu rút tiền về ${bankName} - ${accountNumber}`,
-      status: "pending",
-      withdrawInfo: {
-        bankName,
-        accountNumber,
-        accountName,
-        note,
-      },
-      orderNumber: await nextTransactionOrderNumber(),
-    });
-
-    await tb_vps_logModel.create({
-      userId: user._id,
-      ownerUserId: user._id,
-      action: "withdraw_request",
-      category: "billing",
-      description: `Tạo yêu cầu rút tiền ${amount.toLocaleString()}đ (${bankName})`,
-    });
-
-    return res.redirect("/user/chuyen-khoan?wok=1");
-  } catch (err) {
-    console.log(err);
-    return res.redirect("/user/chuyen-khoan?werr=server_error");
   }
 };
 

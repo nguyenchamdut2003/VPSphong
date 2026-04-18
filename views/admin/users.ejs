@@ -22,6 +22,19 @@
     </header>
 
     <div class="p-8 flex-1">
+      <% if (typeof balanceFlash !== 'undefined' && balanceFlash) { %>
+        <% if (balanceFlash === 'ok') { %>
+          <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">Đã cập nhật số dư khách.</div>
+        <% } else { %>
+          <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
+            <% if (balanceFlash === 'invalid') { %>Thao tác không hợp lệ.<% } %>
+            <% if (balanceFlash === 'amount') { %>Số tiền phải từ 1.000đ, bước 1.000đ.<% } %>
+            <% if (balanceFlash === 'user') { %>Không tìm thấy tài khoản khách.<% } %>
+            <% if (balanceFlash === 'insufficient') { %>Số dư không đủ để trừ.<% } %>
+            <% if (balanceFlash === 'server') { %>Lỗi máy chủ, thử lại sau.<% } %>
+          </div>
+        <% } %>
+      <% } %>
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-left border-collapse">
           <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
@@ -51,13 +64,34 @@
                    </span>
                 </td>
                 <td class="px-6 py-5">
-                  <div class="flex items-center gap-2">
-                    <a href="/admin/users/<%= u._id %>" class="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition shadow-sm">Xem Log & VPS</a>
-                    <form action="/admin/users/toggle-lock" method="POST">
-                      <input type="hidden" name="blockUserId" value="<%= u._id %>">
-                      <button class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-200 rounded-lg text-xs font-bold transition shadow-sm">
-                        <%= u.isActive ? 'Khóa Dùng' : 'Mở Khóa Lại' %>
-                      </button>
+                  <div class="flex flex-col gap-3 max-w-md">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <a href="/admin/users/<%= u._id %>" class="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition shadow-sm">Xem Log & VPS</a>
+                      <form action="/admin/users/toggle-lock" method="POST">
+                        <input type="hidden" name="blockUserId" value="<%= u._id %>">
+                        <button class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-200 rounded-lg text-xs font-bold transition shadow-sm">
+                          <%= u.isActive ? 'Khóa Dùng' : 'Mở Khóa Lại' %>
+                        </button>
+                      </form>
+                    </div>
+                    <form action="/admin/users/adjust-balance" method="POST" class="flex flex-wrap items-end gap-2 border-t border-dashed border-gray-200 pt-3">
+                      <input type="hidden" name="userId" value="<%= u._id %>">
+                      <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Cộng / trừ</label>
+                        <select name="direction" class="text-xs border border-gray-200 rounded-lg px-2 py-2 font-bold bg-gray-50 outline-none">
+                          <option value="add">+ Cộng</option>
+                          <option value="sub">− Trừ</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Số tiền (VNĐ)</label>
+                        <input type="number" name="amount" min="1000" step="1000" required placeholder="10000" class="w-28 text-xs border border-gray-200 rounded-lg px-2 py-2 font-semibold outline-none focus:ring-2 focus:ring-emerald-500/30">
+                      </div>
+                      <div class="flex-1 min-w-[120px]">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Ghi chú</label>
+                        <input type="text" name="note" maxlength="300" placeholder="Tuỳ chọn" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-2 outline-none focus:ring-2 focus:ring-emerald-500/30">
+                      </div>
+                      <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">Áp dụng</button>
                     </form>
                   </div>
                 </td>
