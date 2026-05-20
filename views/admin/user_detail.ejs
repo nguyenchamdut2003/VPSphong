@@ -22,17 +22,23 @@
     </header>
 
     <div class="p-8 flex-1">
-      <div class="mb-4 flex justify-between items-center bg-white p-5 shadow-sm rounded-2xl border border-gray-100">
+      <div class="mb-4 flex flex-wrap justify-between items-center gap-3 bg-white p-5 shadow-sm rounded-2xl border border-gray-100">
         <h4 class="mb-0 text-gray-500 font-medium">Hồ sơ: <span class="text-blue-600 font-bold text-xl ml-1"><%= targetUser.username %></span></h4>
-        <a href="/admin/users" class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-5 py-2.5 rounded-lg font-bold transition">Trở Về</a>
+        <div class="flex flex-wrap gap-2">
+          <a href="/user/vps?customerId=<%= targetUser._id %>" class="bg-violet-600 text-white hover:bg-violet-700 px-5 py-2.5 rounded-lg font-bold transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Sửa IP/User/Pass (giao diện khách)</a>
+          <a href="/admin/users" class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-5 py-2.5 rounded-lg font-bold transition">Trở Về</a>
+        </div>
       </div>
+      <% if (typeof credSaved !== 'undefined' && credSaved) { %>
+      <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">Đã lưu IP / User / Pass.</div>
+      <% } %>
 
       <!-- Danh sách VPS -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-600"><i class="fa-solid fa-server mr-2"></i> VPS Người Này Mua</div>
         <table class="w-full text-left border-collapse">
           <thead class="bg-white text-gray-400 text-xs uppercase tracking-wider border-b border-gray-200">
-            <tr><th class="px-6 py-4">Tên Gói</th><th class="px-6 py-4">Tên hiển thị (admin)</th><th class="px-6 py-4">IP</th><th class="px-6 py-4">Tài khoản SSH</th><th class="px-6 py-4">Ngày Hết Hạn</th><th class="px-6 py-4">Trạng thái</th></tr>
+            <tr><th class="px-6 py-4">Tên Gói</th><th class="px-6 py-4">Tên hiển thị</th><th class="px-6 py-4">IP / User / Pass</th><th class="px-6 py-4">Ngày Hết Hạn</th><th class="px-6 py-4">Trạng thái</th></tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-800">
             <% userVpsList.forEach(uv => { %>
@@ -45,15 +51,26 @@
                     <button type="submit" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold uppercase">Lưu</button>
                   </form>
                 </td>
-                <td class="px-6 py-4 font-bold text-blue-600"><%= uv.ip %></td>
-                <td class="px-6 py-4 font-mono text-xs bg-gray-50 rounded"><span class="text-gray-500">U:</span> <%= uv.username %> <br> <span class="text-gray-500">P:</span> <%= uv.password %></td>
+                <td class="px-6 py-4 min-w-[280px]">
+                  <form action="/user/vps-credentials" method="POST" class="space-y-2">
+                    <input type="hidden" name="userVpsId" value="<%= uv._id %>">
+                    <input type="hidden" name="returnTo" value="user_detail">
+                    <input type="hidden" name="ownerUserId" value="<%= targetUser._id %>">
+                    <input type="text" name="ip" value="<%= uv.ip || '' %>" maxlength="500" placeholder="IP hoặc thông báo" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono font-semibold outline-none focus:ring-2 focus:ring-violet-500/30">
+                    <div class="grid grid-cols-2 gap-2">
+                      <input type="text" name="username" value="<%= uv.username || 'root' %>" maxlength="120" placeholder="User" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-violet-500/30">
+                      <input type="text" name="password" value="<%= uv.password || '' %>" maxlength="200" placeholder="Pass" autocomplete="off" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-violet-500/30">
+                    </div>
+                    <button type="submit" class="w-full px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold uppercase">Lưu</button>
+                  </form>
+                </td>
                 <td class="px-6 py-4 font-bold text-red-500"><%= new Date(uv.expireDate).toLocaleDateString("vi-VN") %></td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 rounded-md text-xs font-bold uppercase <%= uv.status==='running'?'bg-emerald-100 text-emerald-700':(uv.status==='expired'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700') %>"><%= uv.status %></span>
                 </td>
               </tr>
             <% }) %>
-            <% if(userVpsList.length === 0){ %><tr><td colspan="6" class="text-center py-6 text-gray-400 font-medium">Chưa sở hữu máy chủ nào</td></tr><% } %>
+            <% if(userVpsList.length === 0){ %><tr><td colspan="5" class="text-center py-6 text-gray-400 font-medium">Chưa sở hữu máy chủ nào</td></tr><% } %>
           </tbody>
         </table>
       </div>

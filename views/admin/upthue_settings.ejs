@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Cấu hình Up thuê - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }
+    .upthue-cfg-table { table-layout: fixed; width: 100%; }
+    .upthue-cfg-table .col-name { width: 36%; }
+    .upthue-cfg-table .col-num { width: 14%; }
+    .upthue-cfg-table .col-price { width: 18%; }
+    .upthue-cfg-table .col-actions { width: 32%; }
+    .upthue-cfg-table.upthue-cfg-table--2col .col-name { width: 68%; }
+    .upthue-cfg-table.upthue-cfg-table--2col .col-actions { width: 32%; }
+    .upthue-cfg-table td { vertical-align: middle; }
+    .upthue-cfg-table input { width: 100%; box-sizing: border-box; }
+    .upthue-cfg-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  </style>
+</head>
+<body class="flex min-h-screen text-sm">
+
+  <%- include('partials/sidebar', { activeMenu: 'upthue_settings' }) %>
+
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg border-l-4 border-violet-500 pl-3">Cấu Hình Up Thuê Ninja</div>
+      <div class="flex items-center gap-3">
+        <a href="/admin/upthue" class="text-violet-600 font-bold hover:underline text-sm">← Danh sách đơn</a>
+        <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1 space-y-8">
+      <% const errMap = {
+        invalid_time: 'Gói thời gian: dữ liệu không hợp lệ.',
+        invalid_server: 'Máy chủ: dữ liệu không hợp lệ.',
+        server_dup: 'Tên máy chủ đã tồn tại.',
+        invalid_option: 'Gói up: dữ liệu không hợp lệ.',
+        option_dup: 'Mã gói up đã tồn tại.',
+        missing_extra: 'Gói tính phí phải có phụ thu cho mọi gói thời gian.',
+        invalid_extra: 'Phụ thu không hợp lệ.',
+        not_found: 'Không tìm thấy bản ghi.',
+        server: 'Lỗi máy chủ, thử lại.'
+      };
+      const okMap = {
+        time_created: 'Đã thêm gói thời gian.',
+        time_updated: 'Đã cập nhật gói thời gian.',
+        time_toggled: 'Đã đổi trạng thái gói thời gian.',
+        server_created: 'Đã thêm máy chủ.',
+        server_updated: 'Đã cập nhật máy chủ.',
+        server_toggled: 'Đã đổi trạng thái máy chủ.',
+        option_created: 'Đã thêm gói up.',
+        option_updated: 'Đã cập nhật gói up.',
+        option_toggled: 'Đã đổi trạng thái gói up.'
+      }; %>
+      <% if (flashOk && okMap[flashOk]) { %>
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 font-semibold"><%= okMap[flashOk] %></div>
+      <% } %>
+      <% if (flashErr && errMap[flashErr]) { %>
+      <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 font-semibold"><%= errMap[flashErr] %></div>
+      <% } %>
+
+      <!-- Gói thời gian -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+          <h2 class="font-bold text-gray-800"><i class="fa-solid fa-clock mr-2 text-violet-500"></i>Gói thời gian thuê</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <form id="upthue-time-create" method="POST" action="/admin/upthue/settings/time-package/create" class="hidden" aria-hidden="true"></form>
+          <% timePackages.forEach(function(tp) { %>
+          <form id="upthue-time-up-<%= tp._id %>" method="POST" action="/admin/upthue/settings/time-package/<%= tp._id %>/update" class="hidden" aria-hidden="true"></form>
+          <form id="upthue-time-tg-<%= tp._id %>" method="POST" action="/admin/upthue/settings/time-package/<%= tp._id %>/toggle" class="hidden" aria-hidden="true"></form>
+          <% }) %>
+          <table class="upthue-cfg-table text-left text-sm">
+            <colgroup>
+              <col class="col-name"><col class="col-num"><col class="col-price"><col class="col-actions">
+            </colgroup>
+            <thead class="bg-gray-50 text-xs uppercase text-gray-500 border-b">
+              <tr>
+                <th class="px-4 py-3">Tên</th>
+                <th class="px-4 py-3">Số ngày</th>
+                <th class="px-4 py-3">Giá</th>
+                <th class="px-4 py-3">Hành động</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <% timePackages.forEach(function(tp) { %>
+              <tr class="<%= tp.isActive ? '' : 'bg-gray-50 opacity-70' %>">
+                <td class="px-4 py-3">
+                  <input type="text" form="upthue-time-up-<%= tp._id %>" name="name" value="<%= tp.name %>" required class="border rounded-lg px-2 py-1.5 text-sm font-semibold">
+                </td>
+                <td class="px-4 py-3">
+                  <input type="number" form="upthue-time-up-<%= tp._id %>" name="days" value="<%= tp.days %>" min="1" required class="border rounded-lg px-2 py-1.5 text-sm">
+                </td>
+                <td class="px-4 py-3">
+                  <input type="number" form="upthue-time-up-<%= tp._id %>" name="price" value="<%= tp.price %>" min="0" step="1000" required class="border rounded-lg px-2 py-1.5 text-sm">
+                </td>
+                <td class="px-4 py-3">
+                  <div class="upthue-cfg-actions">
+                    <button type="submit" form="upthue-time-up-<%= tp._id %>" class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold">Lưu</button>
+                    <button type="submit" form="upthue-time-tg-<%= tp._id %>" class="px-3 py-1.5 <%= tp.isActive ? 'bg-gray-500 hover:bg-gray-600' : 'bg-emerald-600 hover:bg-emerald-700' %> text-white rounded-lg text-xs font-bold"><%= tp.isActive ? 'Tắt' : 'Bật lại' %></button>
+                  </div>
+                </td>
+              </tr>
+              <% }) %>
+              <tr class="bg-violet-50/80 border-t-2 border-violet-100">
+                <td class="px-4 py-4" colspan="4">
+                  <p class="text-xs font-bold text-violet-800 mb-2">Thêm gói thời gian mới</p>
+                </td>
+              </tr>
+              <tr class="bg-violet-50/50">
+                <td class="px-4 py-3 pb-4">
+                  <input type="text" form="upthue-time-create" name="name" placeholder="Tên hiển thị" required class="border rounded-lg px-2 py-1.5 text-sm">
+                </td>
+                <td class="px-4 py-3 pb-4">
+                  <input type="number" form="upthue-time-create" name="days" placeholder="Ngày" min="1" required class="border rounded-lg px-2 py-1.5 text-sm">
+                </td>
+                <td class="px-4 py-3 pb-4">
+                  <input type="number" form="upthue-time-create" name="price" placeholder="Giá VNĐ" min="0" step="1000" required class="border rounded-lg px-2 py-1.5 text-sm">
+                </td>
+                <td class="px-4 py-3 pb-4">
+                  <button type="submit" form="upthue-time-create" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold">+ Thêm</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Máy chủ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b font-bold text-gray-800"><i class="fa-solid fa-server mr-2 text-cyan-500"></i>Máy chủ</div>
+        <div class="overflow-x-auto">
+          <form id="upthue-server-create" method="POST" action="/admin/upthue/settings/server/create" class="hidden" aria-hidden="true"></form>
+          <% servers.forEach(function(sv) { %>
+          <form id="upthue-server-up-<%= sv._id %>" method="POST" action="/admin/upthue/settings/server/<%= sv._id %>/update" class="hidden" aria-hidden="true"></form>
+          <form id="upthue-server-tg-<%= sv._id %>" method="POST" action="/admin/upthue/settings/server/<%= sv._id %>/toggle" class="hidden" aria-hidden="true"></form>
+          <% }) %>
+          <table class="upthue-cfg-table upthue-cfg-table--2col text-left text-sm">
+            <colgroup>
+              <col class="col-name"><col class="col-actions">
+            </colgroup>
+            <thead class="bg-gray-50 text-xs uppercase text-gray-500 border-b">
+              <tr>
+                <th class="px-4 py-3">Tên</th>
+                <th class="px-4 py-3">Hành động</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <% servers.forEach(function(sv) { %>
+              <tr class="<%= sv.isActive ? '' : 'opacity-60 bg-gray-50' %>">
+                <td class="px-4 py-3">
+                  <input type="text" form="upthue-server-up-<%= sv._id %>" name="name" value="<%= sv.name %>" required class="border rounded-lg px-2 py-1.5">
+                </td>
+                <td class="px-4 py-3">
+                  <div class="upthue-cfg-actions">
+                    <button type="submit" form="upthue-server-up-<%= sv._id %>" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-xs font-bold">Lưu</button>
+                    <button type="submit" form="upthue-server-tg-<%= sv._id %>" class="px-3 py-1.5 <%= sv.isActive ? 'bg-gray-500 hover:bg-gray-600' : 'bg-emerald-600 hover:bg-emerald-700' %> text-white rounded-lg text-xs font-bold"><%= sv.isActive ? 'Tắt' : 'Bật lại' %></button>
+                  </div>
+                </td>
+              </tr>
+              <% }) %>
+              <tr class="bg-cyan-50/80 border-t-2 border-cyan-100">
+                <td class="px-4 py-4" colspan="2">
+                  <p class="text-xs font-bold text-cyan-900 mb-0">Thêm máy chủ mới</p>
+                </td>
+              </tr>
+              <tr class="bg-cyan-50/50">
+                <td class="px-4 py-3 pb-4">
+                  <input type="text" form="upthue-server-create" name="name" placeholder="Tên máy chủ" required class="border rounded-lg px-2 py-1.5">
+                </td>
+                <td class="px-4 py-3 pb-4">
+                  <button type="submit" form="upthue-server-create" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-xs font-bold">+ Thêm máy chủ</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gói up -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b font-bold text-gray-800"><i class="fa-solid fa-list-check mr-2 text-amber-500"></i>Gói up</div>
+        <div class="divide-y">
+          <% options.forEach(function(opt) {
+               const epMap = {};
+               (opt.extraPrices || []).forEach(function(ep) { epMap[String(ep.timePackageId)] = ep.price; });
+          %>
+          <div class="p-4 <%= opt.isActive ? '' : 'bg-gray-50 opacity-70' %>">
+            <form method="POST" action="/admin/upthue/settings/option/<%= opt._id %>/update" class="space-y-3">
+              <div class="flex flex-wrap gap-2 items-end">
+                <input type="text" name="name" value="<%= opt.name %>" required placeholder="Tên gói" class="border rounded-lg px-2 py-1.5 font-semibold min-w-[180px]">
+                <select name="type" class="border rounded-lg px-2 py-1.5 text-sm font-bold option-type-select">
+                  <option value="free" <%= opt.type === 'free' ? 'selected' : '' %>>Miễn phí</option>
+                  <option value="paid" <%= opt.type === 'paid' ? 'selected' : '' %>>Tính phí</option>
+                </select>
+                <button type="submit" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold">Lưu</button>
+                <button type="submit" formaction="/admin/upthue/settings/option/<%= opt._id %>/toggle" formmethod="post" class="px-3 py-1.5 <%= opt.isActive ? 'bg-gray-500 hover:bg-gray-600' : 'bg-emerald-600 hover:bg-emerald-700' %> text-white rounded-lg text-xs font-bold"><%= opt.isActive ? 'Tắt' : 'Bật lại' %></button>
+              </div>
+              <div class="paid-extra-grid grid sm:grid-cols-2 lg:grid-cols-4 gap-2 <%= opt.type === 'paid' ? '' : 'hidden' %>" data-paid-only>
+                <% timePackages.forEach(function(tp) { %>
+                <label class="text-[11px] text-gray-600 block">
+                  Phụ thu — <%= tp.name %> (<%= tp.days %>d)
+                  <input type="number" name="extraPrice_<%= tp._id %>" value="<%= epMap[String(tp._id)] != null ? epMap[String(tp._id)] : '' %>" min="0" step="1000" class="mt-0.5 w-full border rounded-lg px-2 py-1.5 text-sm">
+                </label>
+                <% }) %>
+              </div>
+            </form>
+          </div>
+          <% }) %>
+        </div>
+        <div class="px-6 py-4 border-t bg-amber-50/50">
+          <p class="text-xs font-bold text-amber-900 mb-2">Thêm gói up mới</p>
+          <form method="POST" action="/admin/upthue/settings/option/create" class="space-y-3">
+            <div class="flex flex-wrap gap-2">
+              <input type="text" name="name" placeholder="Tên gói" required class="border rounded-lg px-3 py-2 min-w-[200px]">
+              <select name="type" id="newOptionType" class="border rounded-lg px-3 py-2 font-bold option-type-select">
+                <option value="free">Miễn phí</option>
+                <option value="paid" selected>Tính phí</option>
+              </select>
+              <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold">+ Thêm gói up</button>
+            </div>
+            <div id="newOptionPaidGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 paid-extra-grid">
+              <% timePackages.forEach(function(tp) { %>
+              <label class="text-[11px]">Phụ thu — <%= tp.name %> (<%= tp.days %>d)
+                <input type="number" name="extraPrice_<%= tp._id %>" min="0" step="1000" placeholder="0" class="w-full border rounded-lg px-2 py-1.5 mt-0.5">
+              </label>
+              <% }) %>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+  function syncPaidGrid(sel) {
+    var form = sel.closest('form');
+    if (!form) return;
+    var grid = form.querySelector('[data-paid-only], .paid-extra-grid');
+    if (grid) grid.classList.toggle('hidden', sel.value !== 'paid');
+  }
+  document.querySelectorAll('.option-type-select').forEach(function(sel) {
+    syncPaidGrid(sel);
+    sel.addEventListener('change', function() { syncPaidGrid(sel); });
+  });
+  </script>
+</body>
+</html>

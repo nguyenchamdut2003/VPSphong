@@ -306,16 +306,90 @@ module.exports.postBuyVps = async (req, res) => {
   }
 };
 
-// Xem VPS đang dùng
+// Xem VPS đang dùng (admin: xem/sửa mọi VPS hoặc lọc ?customerId=)
 module.exports.getMyVps = async (req, res) => {
   try {
+    const isSuperAdminVpsManage = res.locals.user.role === "admin";
+    const query = {};
+    let manageCustomerId = null;
+
+    if (isSuperAdminVpsManage) {
+      const cid = String(req.query.customerId || req.query.userId || "").trim();
+      if (cid) {
+        query.userId = cid;
+        manageCustomerId = cid;
+      }
+    } else {
+      query.userId = res.locals.user._id;
+    }
+
     const userVpsList = await tb_user_vpsModel
-      .find({ userId: res.locals.user._id })
+      .find(query)
+      .populate("userId", "username email")
       .populate({ path: "vpsId", populate: { path: "categoryId", select: "name" } })
       .sort({ powerActionStatus: -1, powerActionRequestedAt: -1, createdAt: -1 });
-    res.render("user/vps", { user: res.locals.user, userVpsList });
+
+    res.render("user/vps", {
+      user: res.locals.user,
+      userVpsList,
+      isSuperAdminVpsManage,
+      manageCustomerId,
+      credSaved: req.query.cred_ok === "1",
+    });
   } catch (err) {
+    console.error(err);
     res.send("Lỗi");
+  }
+};
+
+/** Admin cập nhật IP / user / pass trên trang quản lý VPS */
+module.exports.postUpdateVpsCredentials = async (req, res) => {
+  const backToVps = (extra) => {
+    const q = extra || "";
+    return res.redirect(`/user/vps${q}`);
+  };
+
+  try {
+    if (res.locals.user.role !== "admin") {
+      return res.status(403).send("Chỉ admin mới được sửa thông tin đăng nhập VPS.");
+    }
+
+    const userVpsId = String(req.body.userVpsId || "").trim();
+    const ip = String(req.body.ip || "").trim().slice(0, 500);
+    const username = String(req.body.username || "").trim().slice(0, 120);
+    const password = String(req.body.password || "").trim().slice(0, 200);
+    const customerId = String(req.body.customerId || "").trim();
+    const returnTo = String(req.body.returnTo || "").trim();
+    const ownerUserId = String(req.body.ownerUserId || "").trim();
+
+    const uv = await tb_user_vpsModel.findById(userVpsId);
+    if (!uv) {
+      if (returnTo === "user_detail" && ownerUserId) return res.redirect(`/admin/users/${ownerUserId}`);
+      return backToVps(customerId ? `?customerId=${customerId}` : "");
+    }
+
+    uv.ip = ip;
+    uv.username = username || "root";
+    uv.password = password;
+    await uv.save();
+
+    await tb_vps_logModel.create({
+      userId: res.locals.user._id,
+      ownerUserId: uv.userId,
+      userVpsId: uv._id,
+      action: "credentials_update",
+      category: "admin",
+      description: `Admin cập nhật IP/User/Pass${ip ? ` — IP: ${ip}` : ""}`,
+    });
+
+    if (returnTo === "user_detail" && ownerUserId) {
+      return res.redirect(`/admin/users/${ownerUserId}?cred_ok=1`);
+    }
+    const q = customerId || String(uv.userId);
+    return backToVps(`?customerId=${q}&cred_ok=1`);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Lỗi lưu thông tin VPS");
   }
 };
 

@@ -69,6 +69,8 @@ const tb_user = new mongoose.Schema(
     role: { type: String, enum: ["admin", "customer"], default: "customer" },
     balance: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    /** Lần admin mở Báo cáo Log — dùng đếm log khách mới (badge sidebar) */
+    adminPanelSeenLogsAt: { type: Date, default: null },
   },
   {
     collection: "users",
@@ -89,7 +91,7 @@ const tb_transaction = new mongoose.Schema(
     amount: { type: Number, required: true },
     type: {
       type: String,
-      enum: ["deposit", "payment", "renew", "withdraw", "admin_credit", "admin_debit"],
+      enum: ["deposit", "payment", "renew", "withdraw", "admin_credit", "admin_debit", "upthue"],
       required: true,
     },
     description: String,
@@ -186,6 +188,94 @@ const tb_user_vps = new mongoose.Schema(
 tb_user_vps.index({ userId: 1 });
 tb_user_vps.index({ expireDate: 1, autoRenew: 1 });
 tb_user_vps.index({ powerActionStatus: 1, powerActionRequestedAt: -1 });
+
+/** Cấu hình Up thuê — gói thời gian (admin chỉnh tại /admin/upthue/settings) */
+const tb_upthue_time_package = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    days: { type: Number, required: true, min: 1 },
+    price: { type: Number, required: true, min: 0 },
+    isActive: { type: Boolean, default: true },
+  },
+  { collection: "upthue_time_packages", timestamps: true },
+);
+
+/** Máy chủ game (select khi đặt đơn) */
+const tb_upthue_server = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    value: { type: String, required: true, trim: true },
+    isActive: { type: Boolean, default: true },
+  },
+  { collection: "upthue_servers", timestamps: true },
+);
+tb_upthue_server.index({ value: 1 }, { unique: true });
+
+/** Gói up (free / paid + phụ thu theo gói thời gian) */
+const tb_upthue_option = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    code: { type: String, required: true, trim: true, lowercase: true },
+    type: { type: String, enum: ["free", "paid"], required: true },
+    extraPrices: [
+      {
+        timePackageId: { type: mongoose.Schema.Types.ObjectId, ref: "upthue_time_packages", required: true },
+        price: { type: Number, required: true, min: 0 },
+      },
+    ],
+    isActive: { type: Boolean, default: true },
+  },
+  { collection: "upthue_options", timestamps: true },
+);
+tb_upthue_option.index({ code: 1 }, { unique: true });
+
+/** Đơn dịch vụ Up thuê Ninja School */
+const tb_upthue = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
+    maupthue: { type: Number, required: true },
+    timestart: { type: Date, default: Date.now },
+    timeend: { type: Date, required: true },
+    goiup: { type: String, required: true },
+    gia: { type: Number, required: true },
+    map: { type: String, required: true, trim: true },
+    maychu: { type: String, required: true, trim: true },
+    taikhoan: { type: String, required: true, trim: true },
+    matkhauEnc: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["Đang chờ", "Đang làm", "Hoàn thành", "Hủy"],
+      default: "Đang chờ",
+    },
+    timePackageId: { type: mongoose.Schema.Types.ObjectId, ref: "upthue_time_packages" },
+    timePackageSnapshot: {
+      name: { type: String, default: "" },
+      days: { type: Number, default: 0 },
+      price: { type: Number, default: 0 },
+    },
+    serverId: { type: mongoose.Schema.Types.ObjectId, ref: "upthue_servers" },
+    serverSnapshot: {
+      name: { type: String, default: "" },
+      value: { type: String, default: "" },
+    },
+    optionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "upthue_options" }],
+    optionsSnapshot: [
+      {
+        name: { type: String, default: "" },
+        code: { type: String, default: "" },
+        type: { type: String, enum: ["free", "paid"], default: "free" },
+        extraPrice: { type: Number, default: 0 },
+      },
+    ],
+  },
+  {
+    collection: "upthues",
+    timestamps: true,
+  },
+);
+tb_upthue.index({ userId: 1, createdAt: -1 });
+tb_upthue.index({ status: 1, createdAt: -1 });
+tb_upthue.index({ maupthue: 1 }, { unique: true });
 
 /**
  * userId: người thực hiện (khách hoặc admin).
@@ -284,6 +374,10 @@ let tb_voucherModel = db.mongoose.model("vouchers", tb_voucher);
 let tb_counterModel = db.mongoose.model("counters", tb_counter);
 let tb_promo_modalModel = db.mongoose.model("promo_modal", tb_promo_modal);
 let tb_sepay_webhookModel = db.mongoose.model("sepay_webhooks", tb_sepay_webhook);
+let tb_upthueModel = db.mongoose.model("upthues", tb_upthue);
+let tb_upthue_time_packageModel = db.mongoose.model("upthue_time_packages", tb_upthue_time_package);
+let tb_upthue_serverModel = db.mongoose.model("upthue_servers", tb_upthue_server);
+let tb_upthue_optionModel = db.mongoose.model("upthue_options", tb_upthue_option);
 
 module.exports = {
   tb_userModel,
@@ -297,4 +391,8 @@ module.exports = {
   tb_counterModel,
   tb_promo_modalModel,
   tb_sepay_webhookModel,
+  tb_upthueModel,
+  tb_upthue_time_packageModel,
+  tb_upthue_serverModel,
+  tb_upthue_optionModel,
 };

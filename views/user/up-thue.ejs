@@ -1,0 +1,200 @@
+<%- include('partials/panel-start', {
+  user,
+  activeNav: 'upthue',
+  pageTitle: 'Up thuê Ninja',
+  headerTitle: 'Up Thuê Ninja',
+  headerSubtitle: 'Dịch vụ cày thuê NSO'
+}) %>
+
+<div class="max-w-5xl mx-auto">
+  <% if (error) { %>
+  <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800"><%= error %></div>
+  <% } %>
+  <% if (typeof isAdminOrder !== 'undefined' && isAdminOrder) { %>
+  <div class="mb-4 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-900">
+    <i class="fa-solid fa-user-shield mr-1"></i> Tài khoản admin — đặt đơn như khách, <strong>thanh toán 0đ</strong> (không trừ số dư).
+  </div>
+  <% } %>
+  <% if (message) { %>
+  <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"><%= message %></div>
+  <% } %>
+
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="p-6 md:p-8">
+      <div class="grid lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4">
+          <div class="rounded-2xl bg-gray-900 p-4 text-center">
+            <img src="/images/upthue.png" alt="Up thuê" class="max-w-full h-auto rounded-xl mx-auto" onerror="this.style.display='none'">
+            <div class="text-6xl mt-2">🥷</div>
+          </div>
+          <div class="mt-4 rounded-2xl border border-amber-100 bg-amber-50/80 p-5">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-sm font-bold text-gray-700">Tổng thanh toán</span>
+              <span id="tongTienText" class="text-xl font-black <%= (typeof isAdminOrder !== 'undefined' && isAdminOrder) ? 'text-violet-600' : 'text-rose-600' %>">0đ</span>
+            </div>
+            <% if (typeof isAdminOrder !== 'undefined' && isAdminOrder) { %>
+            <p id="catalogGiaHint" class="text-[11px] text-violet-700/80 mb-3 hidden"></p>
+            <% } %>
+            <button type="submit" form="formUpThue" class="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-black uppercase tracking-wide transition shadow-lg shadow-cyan-500/25">
+              Gửi đơn up thuê
+            </button>
+          </div>
+          <a href="/user/up-thue/history" class="mt-3 inline-flex text-sm font-bold text-cyan-600 hover:text-cyan-700"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Xem đơn đã đặt</a>
+        </div>
+
+        <div class="lg:col-span-8">
+          <% if (!timePackages || !timePackages.length) { %>
+          <p class="text-gray-500 font-medium">Chưa có cấu hình gói thời gian. Liên hệ admin.</p>
+          <% } else { %>
+          <form id="formUpThue" method="POST" action="/user/up-thue" class="space-y-4">
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tài khoản game</label>
+                <input type="text" name="taikhoan" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-cyan-500/30">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mật khẩu</label>
+                <input type="password" name="matkhau" required autocomplete="off" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-cyan-500/30">
+              </div>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Máy chủ</label>
+                <select name="serverId" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-cyan-500/30">
+                  <option value="">— Chọn —</option>
+                  <% (servers || []).forEach(function(sv) { %>
+                  <option value="<%= sv._id %>"><%= sv.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Map up (id map)</label>
+                <input type="text" name="map" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-cyan-500/30">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Gói thời gian thuê</label>
+              <div class="space-y-2">
+                <% timePackages.forEach(function(g) { %>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-cyan-200 cursor-pointer">
+                  <input class="time-radio w-4 h-4 text-cyan-600" type="radio" name="timePackageId" value="<%= g._id %>" data-price="<%= g.price %>" data-days="<%= g.days %>">
+                  <span class="text-sm font-semibold text-gray-800"><%= g.name %> — <%= g.price.toLocaleString('vi-VN') %>đ</span>
+                </label>
+                <% }) %>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Gói up</label>
+              <div class="grid sm:grid-cols-2 gap-2">
+                <% (options || []).forEach(function(u) { %>
+                <label class="flex items-start gap-2 p-3 rounded-xl border border-gray-100 hover:border-cyan-200 cursor-pointer">
+                  <input class="goi-up-checkbox mt-0.5 <%= u.type === 'paid' ? 'goi-up-paid' : '' %>" type="checkbox" name="optionIds" value="<%= u._id %>" data-type="<%= u.type %>">
+                  <span class="text-sm font-semibold text-gray-800">
+                    <%= u.name %>
+                    <% if (u.type === 'paid') { %>
+                    <span class="text-[11px] text-amber-700 block mt-0.5">Phụ thu: <strong class="goi-up-fee-amount text-amber-900" data-option-id="<%= u._id %>">Chọn gói thời gian</strong></span>
+                    <% } else { %>
+                    <span class="text-[11px] text-emerald-600 block mt-0.5">Miễn phí — 0đ</span>
+                    <% } %>
+                  </span>
+                </label>
+                <% }) %>
+              </div>
+            </div>
+          </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.UPTHUE_CATALOG = <%- typeof catalogJson !== 'undefined' ? catalogJson : '{"timePackages":[],"options":[]}' %>;
+document.addEventListener('DOMContentLoaded', function () {
+  var catalog = window.UPTHUE_CATALOG || { timePackages: [], options: [], adminFree: false };
+  var adminFree = !!catalog.adminFree;
+  var optMap = {};
+  catalog.options.forEach(function (o) { optMap[o._id] = o; });
+  var catalogGiaHint = document.getElementById('catalogGiaHint');
+
+  var tongTienText = document.getElementById('tongTienText');
+  var timeRadios = document.querySelectorAll('.time-radio');
+  var goiUpPaid = document.querySelectorAll('.goi-up-paid');
+  var basePrice = 0;
+  var currentTimeId = null;
+
+  function formatVND(n) { return (Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
+
+  function calcExtra() {
+    if (!currentTimeId) return 0;
+    var total = 0;
+    goiUpPaid.forEach(function (cb) {
+      if (!cb.checked) return;
+      var o = optMap[cb.value];
+      if (o && o.extraPriceMap && o.extraPriceMap[currentTimeId] != null) {
+        total += Number(o.extraPriceMap[currentTimeId]) || 0;
+      }
+    });
+    return total;
+  }
+
+  function updateOptionFees() {
+    document.querySelectorAll('.goi-up-fee-amount').forEach(function (el) {
+      var optId = el.getAttribute('data-option-id');
+      var o = optMap[optId];
+      if (adminFree) {
+        el.textContent = '0đ';
+        return;
+      }
+      if (!currentTimeId) {
+        el.textContent = 'Chọn gói thời gian';
+        return;
+      }
+      if (!o || !o.extraPriceMap || o.extraPriceMap[currentTimeId] == null) {
+        el.textContent = '—';
+        return;
+      }
+      el.textContent = '+' + formatVND(Number(o.extraPriceMap[currentTimeId]) || 0);
+    });
+  }
+
+  function updateTotal() {
+    var catalogTotal = basePrice + calcExtra();
+    if (adminFree) {
+      tongTienText.textContent = '0đ';
+      if (catalogGiaHint) {
+        catalogGiaHint.textContent = 'Giá catalog (tham khảo): ' + formatVND(catalogTotal);
+        catalogGiaHint.classList.remove('hidden');
+      }
+    } else {
+      tongTienText.textContent = formatVND(catalogTotal);
+      if (catalogGiaHint) catalogGiaHint.classList.add('hidden');
+    }
+    updateOptionFees();
+  }
+
+  timeRadios.forEach(function (r) {
+    r.addEventListener('change', function () {
+      basePrice = Number(this.dataset.price || 0);
+      currentTimeId = String(this.value);
+      updateTotal();
+    });
+  });
+
+  document.querySelectorAll('.goi-up-checkbox').forEach(function (cb) {
+    cb.addEventListener('change', updateTotal);
+  });
+
+  if (timeRadios.length) {
+    timeRadios[0].checked = true;
+    basePrice = Number(timeRadios[0].dataset.price || 0);
+    currentTimeId = String(timeRadios[0].value);
+  }
+  updateTotal();
+});
+</script>
+
+<%- include('partials/panel-end') %>

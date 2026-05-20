@@ -6,7 +6,17 @@
   headerSubtitle: 'Quản Lý Cloud VPS'
 }) %>
 
+<% const isAdminManage = typeof isSuperAdminVpsManage !== 'undefined' && isSuperAdminVpsManage; %>
 <div class="max-w-6xl mx-auto mb-8">
+    <% if (isAdminManage) { %>
+    <div class="mb-6 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 text-sm text-violet-950 shadow-sm">
+      <p class="font-bold text-violet-900 mb-1"><i class="fa-solid fa-user-shield mr-2"></i>Chế độ Superadmin</p>
+      <p class="leading-relaxed">Bạn có thể <strong>sửa IP, User, Pass</strong> trực tiếp trên từng VPS bên dưới. Lọc một khách: <code class="bg-white px-1 rounded">/user/vps?customerId=ID</code> hoặc mở từ <a href="/admin/users" class="text-violet-700 font-bold underline">Danh sách Khách</a>.</p>
+    </div>
+    <% if (typeof credSaved !== 'undefined' && credSaved) { %>
+    <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">Đã lưu IP / User / Pass.</div>
+    <% } %>
+    <% } %>
     <div class="text-center mb-10 mt-6">
         <h2 class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-3">Giao Diện Quản Lý Thông Minh</h2>
         <p class="text-lg text-gray-500 font-medium">Bạn hoàn toàn làm chủ server VPS với các thao tác click đơn giản.</p>
@@ -37,11 +47,16 @@
     <% if (!userVpsList.length) { %>
     <div class="bg-white rounded-[2rem] border-2 border-dashed border-gray-200 p-16 text-center shadow-sm">
         <div class="text-6xl text-gray-200 mb-6"><i class="fa-solid fa-box-open"></i></div>
+        <% if (isAdminManage) { %>
+        <h3 class="text-2xl font-black text-gray-900 mb-2">Không có VPS để quản lý</h3>
+        <p class="text-gray-500 font-medium mb-8">Chọn khách tại <a href="/admin/users" class="text-violet-600 font-bold underline">Danh sách Khách</a> hoặc thêm <code>?customerId=...</code> vào URL.</p>
+        <% } else { %>
         <h3 class="text-2xl font-black text-gray-900 mb-2">Bạn chưa sở hữu VPS nào!</h3>
         <p class="text-gray-500 font-medium mb-8">Nhanh tay thu thập một Cloud chuẩn Ninja với giá cực sốc.</p>
         <a href="/" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sky-500 text-white text-lg font-black hover:bg-sky-600 transition shadow-xl shadow-sky-500/30">
             <i class="fa-solid fa-rocket"></i> Chọn VPS ngay
         </a>
+        <% } %>
     </div>
     <% } else { %>
     <div class="space-y-6">
@@ -66,7 +81,10 @@
             const cfg = vid ? (vid.cpu + 'C / ' + vid.ram + 'G / ' + vid.disk + 'G') : '—';
             const sshUser = (uv.username && String(uv.username).trim()) || 'root';
             const plainPw = (uv.password && String(uv.password)) || '';
-            const searchBlob = (titleName + ' ' + vpsName + ' ' + vpsCode + ' ' + catName + ' ' + ip).toLowerCase();
+            const ownerId = uv.userId && (uv.userId._id || uv.userId);
+            const ownerName = uv.userId && uv.userId.username ? uv.userId.username : '';
+            const isOtherUserVps = isAdminManage && ownerId && String(ownerId) !== String(user._id);
+            const searchBlob = (titleName + ' ' + vpsName + ' ' + vpsCode + ' ' + catName + ' ' + ip + ' ' + ownerName).toLowerCase();
             
             let statusDot = 'bg-gray-400';
             let statusAnim = '';
@@ -108,6 +126,9 @@
                         </div>
                         <% } %>
                         <h3 class="font-black text-xl md:text-2xl text-gray-900 tracking-tight"><%= titleName %> <span class="text-sky-600 text-lg ml-1"><%= vpsCode %></span></h3>
+                        <% if (isAdminManage && ownerName) { %>
+                        <span class="px-2.5 py-1 rounded-full bg-violet-100 text-violet-800 text-[10px] font-black uppercase">KH: <%= ownerName %></span>
+                        <% } %>
                     </div>
                     <% if (titleName !== vpsName) { %>
                     <p class="text-xs text-gray-500 font-medium mb-2">Theo gói: <%= vpsName %></p>
@@ -119,10 +140,36 @@
                         <span><i class="fa-regular fa-clock mr-1.5 text-gray-400"></i>Hết hạn: <strong class="text-gray-700"><%= expStr %></strong></span>
                     </div>
 
+                    <% if (isAdminManage) { %>
+                    <form action="/user/vps-credentials" method="POST" class="mt-4 w-full max-w-2xl bg-white p-4 rounded-xl border-2 border-violet-200 shadow-sm space-y-3">
+                      <input type="hidden" name="userVpsId" value="<%= uv._id %>">
+                      <% if (typeof manageCustomerId !== 'undefined' && manageCustomerId) { %>
+                        <input type="hidden" name="customerId" value="<%= manageCustomerId %>">
+                      <% } else if (ownerId) { %>
+                        <input type="hidden" name="customerId" value="<%= ownerId %>">
+                      <% } %>
+                      <p class="text-[11px] font-black uppercase text-violet-700 tracking-wide"><i class="fa-solid fa-pen-to-square mr-1"></i> Sửa thông tin đăng nhập</p>
+                      <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">IP / Thông báo</label>
+                        <input type="text" name="ip" value="<%= ip %>" maxlength="500" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono font-semibold outline-none focus:ring-2 focus:ring-violet-400/40" placeholder="IP hoặc dòng thông báo cho khách">
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">User</label>
+                          <input type="text" name="username" value="<%= sshUser %>" maxlength="120" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono font-semibold outline-none focus:ring-2 focus:ring-violet-400/40">
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Pass</label>
+                          <input type="text" name="password" value="<%= plainPw %>" maxlength="200" autocomplete="off" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono font-semibold outline-none focus:ring-2 focus:ring-violet-400/40">
+                        </div>
+                      </div>
+                      <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black uppercase tracking-wide transition">Lưu IP / User / Pass</button>
+                    </form>
+                    <% } else { %>
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-4 text-[13px] bg-white p-4 rounded-xl border border-sky-100 shadow-sm user-vps-pw-cell max-w-2xl">
                         <div class="font-medium text-gray-600 flex items-center">
                             <span class="w-10 text-gray-400">IP:</span>
-                            <span class="font-mono font-bold text-gray-900 ml-1 bg-sky-50 px-2 py-1 rounded text-sm"><%= ip || '—' %></span>
+                            <span class="font-mono font-bold text-gray-900 ml-1 bg-sky-50 px-2 py-1 rounded text-sm break-all"><%= ip || '—' %></span>
                         </div>
                         <div class="font-medium text-gray-600 flex items-center">
                             <span class="w-10 text-gray-400">User:</span>
@@ -134,16 +181,18 @@
                                 <div class="bg-gray-50 px-2 py-1 rounded flex items-center gap-3">
                                     <span class="user-vps-pw-masked font-mono font-bold text-gray-900 text-sm select-none tracking-widest mt-0.5">••••••••</span>
                                     <span class="user-vps-pw-plain hidden font-mono font-bold text-gray-900 text-sm select-none"><%= plainPw %></span>
-                                    <button class="user-vps-pw-toggle text-sky-500 hover:text-sky-600 transition"><i class="fas fa-eye"></i></button>
+                                    <button type="button" class="user-vps-pw-toggle text-sky-500 hover:text-sky-600 transition"><i class="fas fa-eye"></i></button>
                                 </div>
                             <% } else { %>
                                 <span class="bg-gray-50 text-gray-400 px-2 py-1 rounded font-mono text-sm">—</span>
                             <% } %>
                         </div>
                     </div>
+                    <% } %>
 
                 </div>
 
+                <% if (!isOtherUserVps) { %>
                 <div class="flex flex-row md:flex-col lg:flex-row flex-wrap gap-3 shrink-0 self-stretch md:self-center">
                     <form action="/user/vps-action" method="POST" class="vps-power-form inline flex-1">
                         <input type="hidden" name="userVpsId" value="<%= uv._id %>">
@@ -162,8 +211,10 @@
                         <% } %>
                     </form>
                 </div>
+                <% } %>
             </div>
             
+            <% if (!isOtherUserVps) { %>
             <div class="mt-6 flex flex-wrap justify-between items-center border-t border-gray-50 pt-5 gap-4">
                 <form action="/user/toggle-autorenew" method="POST" class="inline">
                     <input type="hidden" name="userVpsId" value="<%= uv._id %>">
@@ -176,6 +227,7 @@
                     <button class="px-8 py-3 bg-gray-900 hover:bg-sky-500 text-white rounded-full text-xs font-black uppercase tracking-widest transition shadow-xl shadow-gray-900/20 hover:shadow-sky-500/40">Thanh toán Gia Hạn</button>
                 </form>
             </div>
+            <% } %>
         </div>
         <% }) %>
     </div>

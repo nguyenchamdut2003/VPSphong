@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireLogin } = require('../middlewares/auth.middleware');
 const userController = require('../controllers/user.controller');
+const upthueController = require('../controllers/upthue.controller');
 const { tb_vps_categoryModel } = require('../models/vpsphong');
 const { getSiteSettings } = require('../utils/siteSettings');
 const { getVpsExpiryNotifications } = require('../utils/vpsExpiryNotifications');
@@ -26,7 +27,12 @@ router.post('/account/password', userController.postAccountPassword);
 router.get('/chuyen-khoan', userController.getChuyenKhoan);
 router.post('/buy-vps', userController.postBuyVps);
 
+router.get('/up-thue', upthueController.getUpThue);
+router.post('/up-thue', upthueController.postUpThue);
+router.get('/up-thue/history', upthueController.getUpThueHistory);
+
 router.get('/vps', userController.getMyVps);
+router.post('/vps-credentials', userController.postUpdateVpsCredentials);
 router.post('/toggle-autorenew', userController.postToggleAutoRenew);
 router.post('/renew', userController.postRenew);
 router.post('/vps-action', userController.postVpsAction);

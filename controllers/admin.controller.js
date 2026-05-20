@@ -8,10 +8,19 @@ const {
   tb_site_settingsModel,
   tb_voucherModel,
   tb_promo_modalModel,
+  tb_upthueModel,
 } = require("../models/vpsphong");
 const { getSiteSettings } = require("../utils/siteSettings");
 const { normalizeCode } = require("../utils/voucher");
 const { nextTransactionOrderNumber } = require("../utils/nextTransactionOrderNumber");
+const { getAdminBadgeCounts, markAdminLogsSeen } = require("../utils/adminBadges");
+const { decryptAES } = require("../utils/accountAes");
+const {
+  getGoiUpLabelFromOrder,
+  getServerDisplay,
+  getTimePackageDisplay,
+  UPTHUE_STATUSES,
+} = require("../utils/upthueCatalog");
 const { encrypt, decrypt } = require("../utils/vpsCrypto");
 const fs = require("fs/promises");
 const path = require("path");
@@ -360,6 +369,67 @@ module.exports.postUpdateVps = async (req, res) => {
   }
 };
 
+module.exports.getUpthueOrders = async (req, res) => {
+  try {
+    const orders = await tb_upthueModel
+      .find({})
+      .populate("userId", "username email phone")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const list = orders.map((o) => {
+      let matkhauPlain = "";
+      try {
+        matkhauPlain = decryptAES(o.matkhauEnc || "");
+      } catch {
+        matkhauPlain = "(Không giải mã được)";
+      }
+      return {
+        ...o,
+        matkhauPlain,
+        goiupLabel: getGoiUpLabelFromOrder(o),
+        serverLabel: getServerDisplay(o),
+        timePackageLabel: getTimePackageDisplay(o),
+        timestartText: new Date(o.timestart).toLocaleString("vi-VN"),
+        timeendText: new Date(o.timeend).toLocaleString("vi-VN"),
+      };
+    });
+
+    res.render("admin/upthue", { admin: res.locals.user, list, statuses: UPTHUE_STATUSES });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Lỗi tải danh sách up thuê");
+  }
+};
+
+module.exports.postUpthueStatus = async (req, res) => {
+  try {
+    const id = String(req.params.id || "");
+    const status = String(req.body.status || "").trim();
+    if (!UPTHUE_STATUSES.includes(status)) {
+      return res.redirect("/admin/upthue");
+    }
+    const order = await tb_upthueModel.findById(id);
+    if (!order) return res.redirect("/admin/upthue");
+
+    order.status = status;
+    await order.save();
+
+    await tb_vps_logModel.create({
+      userId: res.locals.user._id,
+      ownerUserId: order.userId,
+      action: "upthue_status",
+      category: "admin",
+      description: `Admin cập nhật đơn up thuê #${order.maupthue} → ${status}`,
+    });
+
+    return res.redirect("/admin/upthue");
+  } catch (e) {
+    console.error(e);
+    return res.redirect("/admin/upthue");
+  }
+};
+
 module.exports.getFixRequests = async (req, res) => {
   try {
     const list = await tb_user_vpsModel
@@ -521,7 +591,13 @@ module.exports.getUserDetail = async (req, res) => {
     .populate("userVpsId")
     .sort({ createdAt: -1 });
 
-  res.render("admin/user_detail", { admin: res.locals.user, targetUser, userVpsList, userLogs });
+  res.render("admin/user_detail", {
+    admin: res.locals.user,
+    targetUser,
+    userVpsList,
+    userLogs,
+    credSaved: req.query.cred_ok === "1",
+  });
 };
 
 module.exports.postRenameUserVps = async (req, res) => {
@@ -556,6 +632,9 @@ module.exports.postRenameUserVps = async (req, res) => {
 };
 
 module.exports.getAllLogs = async (req, res) => {
+  const seenAt = await markAdminLogsSeen(res.locals.user._id);
+  res.locals.user.adminPanelSeenLogsAt = seenAt;
+  res.locals.adminBadges = await getAdminBadgeCounts(res.locals.user);
   const logs = await tb_vps_logModel.find().populate("userId").populate("userVpsId").sort({ createdAt: -1 });
   res.render("admin/logs", { admin: res.locals.user, logs });
 };

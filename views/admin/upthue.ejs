@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Up thuê - VPS Phong Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>body { font-family: 'Inter', system-ui, sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="flex min-h-screen text-sm">
+
+  <%- include('partials/sidebar', { activeMenu: 'upthue' }) %>
+
+  <main class="flex-1 ml-64 flex flex-col min-h-screen">
+    <header class="bg-white h-16 border-b flex items-center justify-between px-8 shadow-sm">
+      <div class="font-bold text-gray-800 text-lg border-l-4 border-violet-500 pl-3">Quản Lý Up Thuê Ninja</div>
+      <div class="flex items-center gap-5">
+         <a href="/admin/upthue/settings" class="text-violet-600 font-bold text-sm hover:underline"><i class="fa-solid fa-sliders mr-1"></i>Cấu hình</a>
+         <span class="font-bold text-gray-900 px-3 py-1 bg-gray-100 rounded-lg"><i class="fa-solid fa-shield-halved text-violet-500 mr-2"></i><%= typeof admin !== 'undefined' ? admin.username : 'Admin' %></span>
+         <a href="/logout" class="text-red-500 hover:text-red-700 font-bold">Đăng Xuất</a>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 font-bold text-gray-700">Danh sách đơn up thuê</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[1100px]">
+            <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+              <tr>
+                <th class="px-4 py-4 font-bold">Mã</th>
+                <th class="px-4 py-4 font-bold">Khách</th>
+                <th class="px-4 py-4 font-bold">Gói thời gian</th>
+                <th class="px-4 py-4 font-bold">Gói up</th>
+                <th class="px-4 py-4 font-bold">Giá</th>
+                <th class="px-4 py-4 font-bold">Map</th>
+                <th class="px-4 py-4 font-bold">Máy chủ</th>
+                <th class="px-4 py-4 font-bold">Tài khoản</th>
+                <th class="px-4 py-4 font-bold">Mật khẩu</th>
+                <th class="px-4 py-4 font-bold">Thời gian</th>
+                <th class="px-4 py-4 font-bold">Trạng thái</th>
+                <th class="px-4 py-4 font-bold">Cập nhật</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-gray-800">
+              <% if (list && list.length) { list.forEach(function(o) {
+                   const st = o.status || '';
+                   const stBadge = st === 'Hoàn thành' ? 'bg-emerald-100 text-emerald-700'
+                     : (st === 'Đang làm' ? 'bg-blue-100 text-blue-700'
+                     : (st === 'Đang chờ' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'));
+              %>
+              <tr class="hover:bg-violet-50/40 transition">
+                <td class="px-4 py-4 font-mono font-bold text-violet-700">#<%= o.maupthue %></td>
+                <td class="px-4 py-4 font-bold"><%= o.userId ? o.userId.username : '—' %></td>
+                <td class="px-4 py-4 text-xs text-gray-600"><%= o.timePackageLabel %></td>
+                <td class="px-4 py-4 text-xs"><%= o.goiupLabel %></td>
+                <td class="px-4 py-4 font-bold text-rose-600"><%= (o.gia || 0).toLocaleString('vi-VN') %>đ</td>
+                <td class="px-4 py-4 font-mono text-xs"><%= o.map %></td>
+                <td class="px-4 py-4"><%= o.serverLabel %></td>
+                <td class="px-4 py-4 font-mono text-xs"><%= o.taikhoan %></td>
+                <td class="px-4 py-4 font-mono text-xs text-gray-600 max-w-[120px] truncate" title="<%= o.matkhauPlain %>"><%= o.matkhauPlain %></td>
+                <td class="px-4 py-4 text-xs text-gray-600 whitespace-nowrap"><%= o.timestartText %><br>→ <%= o.timeendText %></td>
+                <td class="px-4 py-4"><span class="px-2 py-1 rounded-md text-[11px] font-bold <%= stBadge %>"><%= st %></span></td>
+                <td class="px-4 py-4">
+                  <form method="POST" action="/admin/upthue/<%= o._id %>/status" class="flex items-center gap-1">
+                    <select name="status" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 font-semibold bg-white">
+                      <% statuses.forEach(function(s) { %>
+                      <option value="<%= s %>" <%= st === s ? 'selected' : '' %>><%= s %></option>
+                      <% }) %>
+                    </select>
+                    <button type="submit" class="px-2 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold">Lưu</button>
+                  </form>
+                </td>
+              </tr>
+              <% }) } else { %>
+              <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 font-medium">Chưa có đơn up thuê</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
