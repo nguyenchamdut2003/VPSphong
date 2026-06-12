@@ -122,7 +122,7 @@ const tb_sepay_webhook = new mongoose.Schema(
   {
     provider: { type: String, default: "sepay" },
     providerTransactionId: { type: String, required: true },
-    status: { type: String, enum: ["processing", "processed", "failed"], default: "processing" },
+    status: { type: String, enum: ["processing", "processed", "failed", "success"], default: "processing" },
     payload: { type: mongoose.Schema.Types.Mixed, default: {} },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
     username: { type: String, default: "" },
