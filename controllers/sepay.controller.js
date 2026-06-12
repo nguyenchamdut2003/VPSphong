@@ -73,7 +73,7 @@ module.exports.handleSepayPaymentWebhook = async (req, res) => {
         provider: "sepay",
         providerTransactionId,
         payload: body,
-        status: "success",
+        status: "processing",
       });
     } catch (err) {
       if (err?.code === 11000) {
@@ -107,7 +107,7 @@ module.exports.handleSepayPaymentWebhook = async (req, res) => {
       { provider: "sepay", providerTransactionId },
       {
         $set: {
-          status: "success",
+          status: "processed",
           userId: user._id,
           amount,
           username,
